@@ -1,0 +1,25 @@
+Name: elements
+Version: 0.1.0
+License: MIT
+Authors: Rizo Isrof <rizo@odis.io>
+Homepage: http://github.com/rizo/flow
+OASISFormat: 0.4
+BuildTools: camlp4o,ocamlbuild
+Plugins: META (0.4), DevFiles (0.4)
+
+Synopsis:
+  Elements is a collection of small modules, types and functions that will make
+  your life easier.
+
+Library "elements"
+    Path:           src
+    CompiledObject: best
+    Modules:        Elements
+    BuildDepends:   unix
+    Install:        true
+
+SourceRepository master
+  Type:     git
+  Location: https://github.com/rizo/elements.git
+  Browser:  https://github.com/rizo/elements
+
