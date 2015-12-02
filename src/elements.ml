@@ -150,6 +150,12 @@ module List = struct
   let fold_right l ~init ~f = StdLabels.List.fold_right l ~f ~init
   let fold = fold_left
 
+  let rec all xs ~f =
+    match xs with
+    | []               -> true
+    | x :: xs when f x -> all xs ~f
+    | _                -> false
+
   let rev l =
     let rec loop acc l =
       match l with
@@ -243,8 +249,11 @@ module List = struct
       match l with
       | [] -> acc
       | x::_ as l ->
-        let l1, l2 = partition l ~f:(f x) in
-        loop (l1::acc) l2 in
+        let ltrue, lfalse = partition l ~f:(f x) in
+        if len ltrue = 0 then
+          [x] :: acc
+        else
+          loop (ltrue :: acc) lfalse in
     loop [] l
 
   let take l n =
