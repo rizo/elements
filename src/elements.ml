@@ -230,17 +230,27 @@ module List = struct
     | Some key -> reduce l ~f:(fun a b -> if (key a > key b) then a else b)
 
   (* TODO: Inv *)
-  let max_all ?(key = Fn.id) l =
+  let max_all ?key l =
     match l with
     | [] | [_] -> l
-    | x::xs -> fst begin
-        fold xs ~init:([x], key x)
-          ~f:begin fun (acc, el) i ->
-            let v = key i in
-            match () with
-            | () when el < v -> ([i], v)
-            | () when el = v -> (i::acc, el)
-            | ()             -> (acc, el)
+    | h::lista -> begin
+        match key with
+        | None -> fst begin
+            fold ~init:([h], h)
+              ~f:(fun (maxlist,maxelem) b ->
+                  if (maxelem < b) then ([b],b)
+                  else if (maxelem = b) then (b::maxlist,maxelem)
+                  else (maxlist,maxelem)
+                ) lista
+          end
+        | Some f -> fst begin
+            fold ~init:([h], f h)
+              ~f:(fun (maxlist, maxelem) b ->
+                  let kb = f b in
+                  if (maxelem < kb) then ([b],kb)
+                  else if (maxelem = kb) then (b::maxlist,maxelem)
+                  else (maxlist,maxelem)
+                ) lista
           end
       end
 
@@ -333,7 +343,7 @@ module Void = struct
       conclude whatever we like.
       In pithier words, {i from nothing comes anything}.
   *)
-  
+
   module Public = struct
     type void = t
   end
