@@ -333,6 +333,10 @@ module Void = struct
       conclude whatever we like.
       In pithier words, {i from nothing comes anything}.
   *)
+  
+  module Public = struct
+    type void = t
+  end
 end
 
 module Lazy = struct
@@ -346,6 +350,7 @@ module Base = struct
   include Fn.Public
   include List.Public
   include Opt.Public
+  include Void.Public
   include Result.Public
 
   let discard _ = ()
