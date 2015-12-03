@@ -3,6 +3,19 @@ open El_base
 
 include StdLabels.List
 
+let compare cmp a b =
+  let rec loop a b =
+    match a, b with
+    | [], [] ->  0
+    | [], _  -> -1
+    | _ , [] ->  1
+    | x :: xs, y :: ys ->
+      let n = cmp x y in
+      if n = 0 then loop xs ys
+      else n
+  in
+  loop a b
+
 let cons x xs = x::xs
 
 let fold = fold_left
@@ -20,7 +33,7 @@ let rev l =
     | [] -> acc in
   loop [] l
 
-let len l =
+let lenght l =
   let rec loop acc l =
     match l with
     | _::xs -> loop (acc + 1) xs
@@ -116,7 +129,7 @@ let group_with l ~f =
     | [] -> acc
     | x::_ as l ->
       let ltrue, lfalse = partition l ~f:(f x) in
-      if len ltrue = 0 then
+      if length ltrue = 0 then
         [x] :: acc
       else
         loop (ltrue :: acc) lfalse in

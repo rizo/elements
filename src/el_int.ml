@@ -1,10 +1,10 @@
 
 type t = int
 
-let cmp (a: int) (b: int) = Pervasives.compare a b
+let compare (a: int) (b: int) = Pervasives.compare a b
 
-let to_str i = string_of_int i
-let of_str s = int_of_string s
+let to_string i = string_of_int i
+let of_string s = int_of_string s
 
 let abs = Pervasives.abs
 
