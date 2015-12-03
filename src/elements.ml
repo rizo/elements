@@ -1,10 +1,14 @@
 
 module Array  = El_array
+module Either = El_either
 module Exn    = El_exn
+module Float  = El_float
 module Fn     = El_fn
+module Int    = El_int
 module List   = El_list
 module Map    = El_map
 module Option = El_option
+module Result = El_result
 module String = El_string
 module Void   = El_void
 
