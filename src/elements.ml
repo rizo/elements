@@ -60,7 +60,7 @@ module Fn = struct
   let flip f x y = f y x
   let (@@) = apply
   let (@.) = compose
-  let (|>) = invcompose
+  let (|>) = (|>)
 
   module Public = struct
     let (@.) = (@.)
