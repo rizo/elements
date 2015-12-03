@@ -39,3 +39,43 @@ let odd  n = n mod 2 = 1
 let output_line chan line =
   output_string chan (line ^ "\n")
 
+module type Comparable = sig
+  type t
+  val compare : t -> t -> int
+end
+
+module type Type = sig
+  type t
+end
+
+module type Functor = sig
+  type 'a t
+  val map : ('a -> 'b) -> 'a t -> 'b t
+end
+
+module Id = struct
+  module Make (X : Type) = X
+  type 'a t = 'a
+  let map f x = f x
+end
+
+module type Monad = sig
+  type 'a t
+  val return : 'a -> 'a t
+  val bind : 'a t -> ('a -> 'b t) -> 'b t
+end
+
+module Lazy = struct
+  include Lazy
+  let (!) = Lazy.force
+end
+
+module Log = struct
+  let out level msg =
+    output_line stderr (fmt "%s: %s"  level msg); flush stderr
+  let info msg = out "info" msg
+  let error msg = out "error" msg
+  let warning msg = out "warning" msg
+end
+
+

@@ -16,6 +16,14 @@ let compare cmp a b =
   in
   loop a b
 
+module Map = struct
+  module Make (M : Comparable) =
+    Map.Make(struct
+      type t = M.t list
+      let compare = compare (M.compare)
+    end)
+end
+
 let cons x xs = x::xs
 
 let fold = fold_left
