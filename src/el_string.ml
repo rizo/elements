@@ -1,10 +1,10 @@
 
 include String
 
-let split ?(sep=' ') str =
+let split ?(on=' ') str =
   let rec indices acc i =
     try
-      let i = succ (String.index_from str i sep) in
+      let i = succ (String.index_from str i on) in
       indices (i::acc) i
     with Not_found ->
       (String.length str + 1) :: acc
