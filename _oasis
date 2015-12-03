@@ -14,7 +14,22 @@ Synopsis:
 Library "elements"
     Path:           src
     CompiledObject: best
-    Modules:        Elements
+    Modules:
+      Elements,
+      El_array,
+      El_base,
+      El_either,
+      El_exn,
+      El_float,
+      El_fn,
+      El_int,
+      El_list,
+      El_map,
+      El_option,
+      El_result,
+      El_string,
+      El_void
+
     BuildDepends:   unix
     Install:        true
 
