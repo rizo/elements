@@ -1,6 +1,4 @@
 
-module List = El_list
-
 type 'a printer = Buffer.t -> 'a -> unit
 type 'a formatter = Format.formatter -> 'a -> unit
 
@@ -38,7 +36,7 @@ module Make(O : Map.OrderedType) = struct
     | None -> remove k m
     | Some v' -> add k v' m
 
-  let add_list m l = List.fold_left ~f:(fun m (k,v) -> add k v m) ~init:m l
+  let add_list m l = El_list.fold_left ~f:(fun m (k,v) -> add k v m) ~init:m l
 
   let of_list l = add_list empty l
 

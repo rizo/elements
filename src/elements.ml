@@ -35,3 +35,7 @@ let fail  = Exn.fail
 (* Public Void *)
 type void = Void.t
 
+(* Public Result *)
+let is_ok    = Result.is_ok
+let is_error = Result.is_error
+
