@@ -14,3 +14,5 @@ let error x = Error x
 let is_ok    = function (Ok _)    -> true | _ -> false
 let is_error = function (Error _) -> true | _ -> false
 
+let to_option = function (Ok x) -> Some x | Error _ -> None
+
