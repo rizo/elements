@@ -3,6 +3,8 @@ open El_base
 
 include StdLabels.List
 
+type ('k, 'v) assoc = ('k * 'v) list
+
 let compare cmp a b =
   let rec loop a b =
     match a, b with
@@ -150,4 +152,14 @@ let take l n =
       | x::xs -> loop xs (n - 1) (x :: acc)
       | [] -> rev acc in
   loop l n []
+
+let rec fold_until ~init:acc ~f l =
+  match l with
+  | a::rest ->
+    begin match f acc a with
+    | `Continue acc -> fold_until ~init:acc ~f rest
+    | `Stop acc -> acc
+    end
+  | [] -> acc
+
 

@@ -1,4 +1,6 @@
 
+type ordering = LT | EQ | GT
+
 type ('a, 'e) result =
   | Ok    of 'a
   | Error of 'e
