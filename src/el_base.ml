@@ -19,11 +19,13 @@ let either f g x =
 
 let discard _ = ()
 
-let time f x =
-  let t = Unix.gettimeofday () in
+let time ?fmt f x =
+  let t0 = Unix.gettimeofday () in
   let fx = f x in
-  Printf.printf "Elapsed time: %f sec\n"
-    (Unix.gettimeofday () -. t);
+  let t1 = Unix.gettimeofday () -. t0 in
+  match fmt with
+  | Some fmt -> Printf.eprintf (fmt t1)
+  | None     -> Printf.eprintf "Elapsed time: %f sec\n" t1;
   fx
 
 (* Printing and Formatting *)
