@@ -10,6 +10,7 @@ module Map    = El_map
 module Option = El_option
 module Result = El_result
 module String = El_string
+module Stream = El_stream
 module Void   = El_void
 
 include El_base

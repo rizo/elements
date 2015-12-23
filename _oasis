@@ -28,6 +28,7 @@ Library "elements"
       El_option,
       El_result,
       El_string,
+      El_stream,
       El_void
 
     BuildDepends:   unix

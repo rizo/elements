@@ -5,7 +5,7 @@ include StdLabels.List
 
 type ('k, 'v) assoc = ('k * 'v) list
 
-let compare cmp a b =
+let compare ?(cmp = Pervasives.compare) a b =
   let rec loop a b =
     match a, b with
     | [], [] ->  0
@@ -13,7 +13,8 @@ let compare cmp a b =
     | _ , [] ->  1
     | x :: xs, y :: ys ->
       let n = cmp x y in
-      if n = 0 then loop xs ys
+      if n = 0
+      then loop xs ys
       else n
   in
   loop a b
@@ -22,7 +23,7 @@ module Map = struct
   module Make (M : Comparable) =
     Map.Make(struct
       type t = M.t list
-      let compare = compare (M.compare)
+      let compare = compare ~cmp:(M.compare)
     end)
 end
 
