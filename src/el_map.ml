@@ -5,7 +5,7 @@ type 'a formatter = Format.formatter -> 'a -> unit
 module type S = sig
   include Map.S
 
-  val get : key: key -> 'a t -> 'a option
+  val find_opt : key: key -> 'a t -> 'a option
 
   val update : key: key -> f: ('a option -> 'a option) -> 'a t -> 'a t
 
@@ -23,7 +23,7 @@ end
 module Make(O : Map.OrderedType) = struct
   include MoreLabels.Map.Make(O)
 
-  let get k m =
+  let find_opt k m =
     try Some (find k m)
     with Not_found -> None
 
@@ -36,12 +36,36 @@ module Make(O : Map.OrderedType) = struct
     | None -> remove k m
     | Some v' -> add k v' m
 
-  let add_list m l = El_list.fold_left ~f:(fun m (k,v) -> add k v m) ~init:m l
+  let values map =
+    List.rev (fold map ~init:[] ~f:(fun ~key ~data acc -> data::acc))
 
-  let of_list l = add_list empty l
+  let to_assoc map =
+    List.rev (fold map ~init:[] ~f:(fun ~key ~data acc -> (key, data)::acc))
 
-  let to_list m =
-    fold m ~init:[] ~f:(fun ~key ~data acc -> (key, data)::acc)
+  let add_assoc m l =
+    List.fold_left ~f:(fun m (k,v) -> add k v m) ~init:m l
+
+  let of_assoc a = add_assoc empty a
+
+  let of_gen g =
+    let rec loop acc =
+      match g () with
+      | Some (k, v) ->
+        let acc =
+          begin match find_opt k acc with
+            | Some old_list -> add acc ~key:k ~data:(v::old_list)
+            | None          -> add acc ~key:k ~data:(v::[])
+          end in
+        loop acc
+      | None -> acc in
+    loop empty
+
+  let aggregate_list ~by:f ~init ~f:op l =
+    List.fold_left l ~init:empty ~f:(fun acc elem ->
+        let (key, data) = f elem in
+        match find_opt key acc with
+        | Some old -> add acc ~key ~data:(op data old)
+        | None -> add acc ~key ~data:(op data init))
 
   let pp ?(start="{") ?(stop="}") ?(arrow="->") ?(sep=", ") pp_k pp_v buf m =
     let first = ref true in

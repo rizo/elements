@@ -17,6 +17,7 @@ Library "elements"
     Modules:
       Elements,
       El_array,
+      El_persistent_vector,
       El_base,
       El_either,
       El_exn,

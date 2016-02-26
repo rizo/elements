@@ -1,104 +1,104 @@
 
 open El_base
 
-type 'a t =
-  | Empty
-  | Yield of 'a * 'a t lazy_t
+type 'a t = Empty | Yield of 'a * (unit -> 'a t)
 
 let empty = Empty
 
-let yield a = Yield (a, lazy empty)
+let yield a = Yield (a, fun () -> empty)
 
 let next s =
   match s with
   | Empty -> None
-  | Yield (x, lazy s) -> Some (x, s)
+  | Yield (x, s) -> Some (x, s ())
 
 let rec append s1 s2 =
   match s1 with
-  | Empty -> Lazy.force s2
-  | Yield (x, lazy s') -> Yield (x, lazy (append s' s2))
+  | Empty -> s2 ()
+  | Yield (x, s') -> Yield (x, fun () -> append (s' ()) s2)
 
 let (++) = append
 
 let rec count n =
-  yield n ++ lazy (count (n + 1))
+  yield n ++ fun () -> count (n + 1)
 
-let rec cycle g =
-  g ++ lazy (cycle g)
+let rec cycle s () =
+  s ++ cycle s
 
 let rec take n s =
   if n = 0 then empty
   else match next s with
-    | Some (x, s) -> yield x ++ lazy (take (n - 1) s)
+    | Some (x, s) -> yield x ++ fun () -> take (n - 1) s
     | None        -> empty
 
-let rec each f g =
-  match g with
-  | Yield (x, lazy g) -> f x; each f g
-  | Empty             -> ()
+let rec each f s =
+  match s with
+  | Yield (x, s') -> f x; each f (s' ())
+  | Empty          -> ()
 
-let rec map f g =
-  match g with
-  | Yield (x, lazy g) -> yield (f x) ++ lazy (map f g)
-  | Empty             -> empty
+let rec map f s =
+  match next s with
+  | Some (x, s') -> yield (f x) ++ fun () -> map f s'
+  | None         -> empty
 
-let rec filter p g =
-  match g with
-  | Yield (x, lazy g) -> if p x then yield x ++ lazy (filter p g) else filter p g
-  | Empty             -> empty
+let rec filter f s =
+  match next s with
+  | Some (x, s') when f x -> yield x ++ fun () -> filter f s'
+  | Some (x, s')          -> filter f s'
+  | None                  -> empty
 
-
-let fold ~f ~init s =
-  let rec loop s acc =
+let fold f init s =
+  let rec loop acc s =
     match s with
-    | Yield (a, lazy s) -> loop s (f acc a)
-    | Empty             -> acc in
-  loop s init
+    | Yield (a, s') -> loop (f acc a) (s' ())
+    | Empty          -> acc in
+  loop init s
 
-let length g =
-  fold ~init:0 ~f:(fun c _ -> c + 1) g
-
-(* Lists *)
-let l0 = []
-let l1 = [1; 2; 3; 4; 5; 6; 7]
-let rec l2 = 0::l2
+let length g = fold (fun c _ -> c + 1) 0 g
 
 let rec of_list xs =
   match xs with
   | []      -> empty
-  | x :: xs -> Yield (x, lazy (of_list xs))
+  | x :: xs -> Yield (x, fun () -> of_list xs)
 
-let to_list g =
-  let rec loop acc g =
-    match g with
-    | Yield (a, lazy g) -> loop (a::acc) g
-    | Empty            -> List.rev acc
-  in loop [] g
+let to_list s =
+  let rec loop acc s =
+    match s with
+    | Yield (a, s') -> loop (a::acc) (s' ())
+    | Empty          -> List.rev acc
+  in loop [] s
 
 let of_array a =
   let rec loop i =
     if i = 0 then empty
-    else (yield a.(i) ++ lazy (loop (i - 1))) in
+    else (yield a.(i) ++ fun () -> loop (i - 1)) in
   loop (Array.length a - 1)
 
-let to_array g =
-  let curr = ref g in
-  Array.init (length g) (fun _ ->
+let to_array s =
+  let curr = ref s in
+  Array.init (length s) (fun _ ->
       match !curr with
-      | Yield (x, lazy g) -> curr := g; x
-      | Empty             -> assert false)
+      | Yield (x, s') -> curr := s' (); x
+      | Empty          -> assert false)
 
 let of_channel c =
   let rec loop () =
-    try (yield (input_line c) ++ lazy (loop ()))
+    try (yield (input_line c) ++ fun () -> loop ())
     with End_of_file -> empty in
   loop ()
 
-let to_channel c g =
-  each (fun line -> output_line c line) g
+let to_channel c s =
+  each (fun line -> output_line c line) s
 
-module type Enum = sig
+(* Combinators *)
+
+(* val or : bool list -> bool *)
+let or_ s = fold (fun r a -> r || a) false s
+
+(* val any : ('a -> bool) -> 'a t -> bool *)
+let any f s = or_ (map f s)
+
+module type S = sig
   type 'a t
   val all : ('a -> bool) -> 'a t -> bool
   val any : ('a -> bool) -> 'a t -> bool
@@ -132,6 +132,7 @@ module type Enum = sig
   val max : ?cmp: ('a -> 'a -> ordering) -> 'a t -> 'a
   val min : ?cmp: ('a -> 'a -> ordering) -> 'a t -> 'a
   val nth : int -> 'a t -> 'a option
+  val or_ : bool t -> bool
   val partition : ('a -> bool) -> 'a t -> ('a t * 'a t)
   val reduce : ('r -> 'a -> 'r) -> 'a t -> 'r option
   val reject : ('a -> bool) -> 'a t -> 't
