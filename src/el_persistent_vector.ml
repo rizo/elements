@@ -36,10 +36,10 @@ let singleton a = {
 }
 
 (* O(1) *)
-let is_empty t = t.length = 0
+let is_empty v = v.length = 0
 
 (* O(1) *)
-let length t = t.length
+let length v = v.length
 
 let link = function
   | Link a -> a
@@ -53,34 +53,31 @@ let tail_offset length =
   if length < 32 then 0
   else ((length - 1) lsr shift_by) lsl shift_by
 
-let node_with_index t i =
-  if i >= tail_offset t.length then
-    Data t.tail
+let node_with_index v idx =
+  if idx >= tail_offset v.length
+  then Data v.tail
   else
-    let rec loop level n =
-      if level = 0 then
-        Array.get (link n) ((i lsr level) land (trie_len - 1))
+    let rec loop level node =
+      if level = 0 then node
       else
-        let j = (i lsr level) land (trie_len - 1) in
-        loop (level - shift_by) (Array.get (link n) j) in
-    loop (t.shift - shift_by) (Array.get t.root (i lsr t.shift))
+        let sub_idx = (idx lsr level) land (trie_len - 1) in
+        loop (level - shift_by) (Array.get (link node) sub_idx) in
+    loop (v.shift - shift_by) (Array.get v.root (idx lsr v.shift))
 
 (* O(log32(n)) ~ O(1) *)
-let get t i =
-  if i < 0 || i >= length t then None
-  else
-    let node = node_with_index t i in
-    Some (Array.get (data node) (i land (trie_len - 1)))
+let unsafe_get v idx =
+  let node = node_with_index v idx in
+  Array.get (data node) (idx land (trie_len - 1))
 
 (* O(log32(n)) ~ O(1) *)
-let unsafe_get t i =
-  let node = node_with_index t i in
-  Array.get (data node) (i land (trie_len - 1))
+let get v idx =
+  if idx < 0 || idx >= length v
+  then None
+  else Some (unsafe_get v idx) (* It's safe now. *)
 
 let rec new_path level tail =
   if level = 0 then Data tail
   else Link [| new_path (level - shift_by) tail |]
-
 
 (* Pushes the tail array to its correct location in the tree.
    If the parent is a leaf node, add the tail as a Data node.
@@ -88,13 +85,11 @@ let rec new_path level tail =
    Otherwise add a new child to parent with a tail node. *)
 let rec push_tail length level (parent : 'a node array) tail : 'a node array =
   let sub_idx = ((length - 1) lsr level) land (trie_len - 1) in
-
   (* Parent is a leaf node. *)
   if level = shift_by then
     let target  = Data tail in
     let parent' = Array.copy_and_add parent target in
     parent'
-
   (* Maps to existing child.
      Replace the child with a link to target. *)
   else if sub_idx < Array.length parent then
@@ -103,7 +98,6 @@ let rec push_tail length level (parent : 'a node array) tail : 'a node array =
      let parent' = Array.copy parent in
      Array.set parent' sub_idx target;
      parent'
-
   (* Does not map to existing child.
      Create a link and add path. *)
   else
@@ -111,40 +105,35 @@ let rec push_tail length level (parent : 'a node array) tail : 'a node array =
     let parent' = Array.copy_and_add parent target in
     parent'
 
-
 (* O(log32(n)) ~ O(1) *)
-let add self x =
-  if self.length = 0 then singleton x
+let add v x =
+  if v.length = 0 then singleton x
   else
     (* Tail update.
        Tail node has room for another element.
        Duplicate the old tail and add a new element.
        Return the updated vector with incremented length and a new tail. *)
-  if self.length land (trie_len - 1) <> 0 then
-    { self with length = self.length + 1;
-                tail   = Array.copy_and_add self.tail x }
-
+  if v.length land (trie_len - 1) <> 0 then
+    { v with length = v.length + 1;
+                tail   = Array.copy_and_add v.tail x }
   (* Root overflow
      The current length requires another shift.
      Replace the current root with a new one and add the tail to the tree. *)
-  else if self.length lsr shift_by > 1 lsl self.shift then
-    { length = self.length + 1;
-      shift  = self.shift  + shift_by;
+  else if v.length lsr shift_by > 1 lsl v.shift then
+    { length = v.length + 1;
+      shift  = v.shift  + shift_by;
       tail   = [| x |];
-      root   = [| Link self.root; new_path self.shift self.tail |] }
-
+      root   = [| Link v.root; new_path v.shift v.tail |] }
   (* Update the tree.
      Push the tail to the root. *)
   else
-    { length = self.length + 1;
-      shift  = self.shift;
+    { length = v.length + 1;
+      shift  = v.shift;
       tail   = [| x |];
-      root   = push_tail self.length self.shift self.root self.tail }
-
+      root   = push_tail v.length v.shift v.root v.tail }
 
 let of_list l =
   List.fold_left ~f:(fun v x -> add v x) ~init:empty l
-
 
 let add_from_list init l =
   List.fold_left ~f:(fun v x -> add v x) ~init l
