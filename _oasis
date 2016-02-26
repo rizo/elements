@@ -32,7 +32,7 @@ Library "elements"
       El_stream,
       El_void
 
-    BuildDepends:   unix
+    BuildDepends:   unix, ppx_deriving.std
     Install:        true
 
 SourceRepository master

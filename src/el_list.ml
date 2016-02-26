@@ -44,18 +44,22 @@ let rev l =
     | [] -> acc in
   loop [] l
 
-let lenght l =
+let length l =
   let rec loop acc l =
     match l with
-    | _::xs -> loop (acc + 1) xs
+    | _ :: xs -> loop (acc + 1) xs
     | [] -> acc in
   loop 0 l
 
-let rec range s e =
-  if s = e then []
-  else s::range (s + 1) e
+let range i j =
+  let rec up i j acc =
+    if i=j then i::acc else up i (j-1) (j::acc)
+  and down i j acc =
+    if i=j then i::acc else down i (j+1) (j::acc)
+  in
+  if i<=j then up i j [] else down i j []
 
-let iota = range 0
+let iota n = range 0 n
 
 let map l ~f =
   rev (fold l ~f:(fun acc e -> f e::acc) ~init:[])
