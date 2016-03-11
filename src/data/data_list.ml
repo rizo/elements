@@ -1,5 +1,7 @@
 
-open El_base
+module Result = Data_result
+
+open Base
 
 include StdLabels.List
 
@@ -18,14 +20,6 @@ let compare ?(cmp = Pervasives.compare) a b =
       else n
   in
   loop a b
-
-module Map = struct
-  module Make (M : Comparable) =
-    Map.Make(struct
-      type t = M.t list
-      let compare = compare ~cmp:(M.compare)
-    end)
-end
 
 let cons x xs = x::xs
 
@@ -97,7 +91,7 @@ let reduce l ~f =
   | x::xs -> Ok (fold xs ~f ~init:x)
   | [] -> Error (Failure "reduce: empty list with no initial value")
 
-let reduce_exn l ~f = El_result.(!) (reduce l ~f)
+let reduce_exn l ~f = Result.(!) (reduce l ~f)
 
 let find l ?key ~f =
   match key with

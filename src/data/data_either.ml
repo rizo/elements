@@ -1,5 +1,5 @@
 
-open El_base
+open Base
 
 type ('a, 'b) t = ('a, 'b) either
 

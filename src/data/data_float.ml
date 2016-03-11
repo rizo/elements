@@ -1,5 +1,6 @@
 
 type t = float
+  [@@deriving show]
 
 let compare (a : t) (b : t) =
   Pervasives.compare a b

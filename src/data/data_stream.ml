@@ -1,5 +1,5 @@
 
-open El_base
+open Base
 
 type 'a t = Empty | Yield of 'a * (unit -> 'a t)
 

@@ -1,5 +1,11 @@
 S src
+S src/data
+S src/base
+
 B _build/src
+B _build/src/base
+B _build/src/data
+
 PKG ppx_deriving.std
 
 

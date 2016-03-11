@@ -1,8 +1,10 @@
 Name: elements
-Version: 0.1.0
+Version: 0.2.0
 License: MIT
 Authors: Rizo Isrof <rizo@odis.io>
 Homepage: http://github.com/rizo/flow
+OCamlVersion:           >= 4.02
+AlphaFeatures:          ocamlbuild_more_args
 OASISFormat: 0.4
 BuildTools: camlp4o,ocamlbuild
 Plugins: META (0.4), DevFiles (0.4)
@@ -11,32 +13,58 @@ Synopsis:
   Elements is a collection of small modules, types and functions that will make
   your life easier.
 
+Library "base"
+  Path:           src/base
+  CompiledObject: best
+  FindlibParent:  elements
+  BuildDepends:   ppx_deriving.std
+  Modules:        Base
+
+Library "data"
+  Path:           src/data
+  CompiledObject: best
+  BuildDepends:   elements.base,
+                  ppx_deriving.std
+  FindlibParent:  elements
+  Modules:        Data,
+                  Data_array,
+                  Data_counter,
+                  Data_either,
+                  Data_float,
+                  Data_int,
+                  Data_list,
+                  Data_map,
+                  Data_option,
+                  Data_result,
+                  Data_stream,
+                  Data_string,
+                  Data_vector,
+                  Data_void
+
+Library "control"
+  Path:           src/control
+  CompiledObject: best
+  BuildDepends:   elements.base,
+                  ppx_deriving.std
+  FindlibParent:  elements
+  Modules:        Control,
+                  Control_fn,
+                  Control_exn
+
+Library "system"
+  Path:           src/system
+  CompiledObject: best
+  BuildDepends:   elements.base, unix
+  FindlibParent:  elements
+  Modules:        System
+
+
 Library "elements"
-    Path:           src
-    CompiledObject: best
-    Modules:
-      Elements,
-      El_array,
-      El_persistent_vector,
-      El_base,
-      El_either,
-      El_exn,
-      El_float,
-      El_fn,
-      El_int,
-      El_list,
-      El_map,
-      El_option,
-      El_result,
-      El_string,
-      El_stream,
-      El_void
-
-    BuildDepends:   unix, ppx_deriving.std
-    Install:        true
-
-SourceRepository master
-  Type:     git
-  Location: https://github.com/rizo/elements.git
-  Browser:  https://github.com/rizo/elements
+  Path:           src
+  CompiledObject: best
+  BuildDepends:   elements.base,
+                  elements.data,
+                  elements.control,
+                  elements.system
+  Modules:        Elements
 

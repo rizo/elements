@@ -1,33 +1,47 @@
 
+module List = Data_list
+
 type 'a printer = Buffer.t -> 'a -> unit
 type 'a formatter = Format.formatter -> 'a -> unit
 
+module type OrderedType = Map.OrderedType
+
 module type S = sig
-  include Map.S
+  include MoreLabels.Map.S
 
-  val find_opt : key: key -> 'a t -> 'a option
+  val find_opt : key -> 'a t -> 'a option
+  val find_def : key -> 'a -> 'a t -> 'a
 
-  val update : key: key -> f: ('a option -> 'a option) -> 'a t -> 'a t
+  val update : key -> f: ('a option -> 'a option) -> 'a t -> 'a t
 
-  val of_list  : (key * 'a) list -> 'a t
-  val to_list  : 'a t -> (key * 'a) list
-  val add_list : 'a t -> (key * 'a) list -> 'a t
+  val add_multi : 'a list t -> key:key -> data:'a -> 'a list t
+
+  val of_assoc  : (key * 'a) list -> 'a t
+  val to_assoc  : 'a t -> (key * 'a) list
+  val add_assoc : 'a t -> (key * 'a) list -> 'a t
 
   val pp : ?start:string -> ?stop:string -> ?arrow:string -> ?sep:string ->
             key printer -> 'a printer -> 'a t printer
 
-  val p : ?start:string -> ?stop:string -> ?arrow:string -> ?sep:string ->
+  val print : ?start:string -> ?stop:string -> ?arrow:string -> ?sep:string ->
             key formatter -> 'a formatter -> 'a t formatter
 end
 
-module Make(O : Map.OrderedType) = struct
-  include MoreLabels.Map.Make(O)
+module Make(K : Map.OrderedType) : S
+  with type 'a t = 'a MoreLabels.Map.Make(K).t
+   and type key = K.t =
+struct
+  include MoreLabels.Map.Make(K)
 
   let find_opt k m =
     try Some (find k m)
     with Not_found -> None
 
-  let update k f m =
+  let find_def k default m =
+    try find k m
+    with Not_found -> default
+
+  let update k ~f m =
     let x =
       try f (Some (find k m))
       with Not_found -> f None
@@ -46,6 +60,10 @@ module Make(O : Map.OrderedType) = struct
     List.fold_left ~f:(fun m (k,v) -> add k v m) ~init:m l
 
   let of_assoc a = add_assoc empty a
+
+  let add_multi m ~key ~data:el =
+    let prev_el_list = find_def key [] m in
+    add ~key ~data:(el :: prev_el_list) m
 
   let of_gen g =
     let rec loop acc =
@@ -86,12 +104,15 @@ module Make(O : Map.OrderedType) = struct
       ~f:(fun ~key:k ~data:v ->
         if !first then first := false else (
           Format.pp_print_string fmt sep;
-          Format.pp_print_cut fmt ()
-        );
+          Format.pp_print_cut fmt ());
         pp_k fmt k;
         Format.pp_print_string fmt arrow;
-        pp_v fmt v;
-      ) m;
+        pp_v fmt v) m;
     Format.pp_print_string fmt stop
 end
+
+module Int   = Make(Data_int)
+module Float = Make(Data_float)
+
+
 

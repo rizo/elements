@@ -2,8 +2,8 @@
 type 'a t = 'a option
 exception No_value
 
-let some x = Some x
-let none = None
+let some = Base.some
+let none = Base.none
 
 let option ~none:if_none ~some:if_some opt =
   match opt with
@@ -22,9 +22,7 @@ let value ~default opt =
 
 let return x = Some x
 
-let guard f x =
-  try Some (f x)
-  with _ -> None
+let guard  = Base.guard
 
 let (>>=) opt f =
   match opt with

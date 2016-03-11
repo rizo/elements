@@ -1,10 +1,11 @@
 (* Persistent bit-partitioned Vector Trie *)
 
-module Array = El_array
-module List  = El_list
-open El_base
+module Array = Data_array
+module List  = Data_list
 
-let shift_by = 2
+open Base
+
+let shift_by = 5
 let trie_len = int_of_float (2.0 ** float_of_int shift_by)
 
 type 'a t = {
@@ -43,11 +44,11 @@ let length v = v.length
 
 let link = function
   | Link a -> a
-  | Data _ -> El_exn.fail "link request on data node"
+  | Data _ -> fail "link request on data node"
 
 let data = function
   | Data a -> a
-  | Link a -> El_exn.fail "data request on link node"
+  | Link a -> fail "data request on link node"
 
 let tail_offset length =
   if length < 32 then 0

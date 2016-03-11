@@ -19,15 +19,6 @@ let either f g x =
 
 let discard _ = ()
 
-let time ?fmt f x =
-  let t0 = Unix.gettimeofday () in
-  let fx = f x in
-  let t1 = Unix.gettimeofday () -. t0 in
-  match fmt with
-  | Some fmt -> Printf.eprintf (fmt t1)
-  | None     -> Printf.eprintf "Elapsed time: %f sec\n" t1;
-  fx
-
 (* Printing and Formatting *)
 
 let print = print_endline
@@ -43,13 +34,19 @@ let odd  n = n mod 2 = 1
 let output_line chan line =
   output_string chan (line ^ "\n")
 
-module type Comparable = sig
+(* Common signatures *)
+
+module type Type = sig
+  type t
+end
+
+module type Ord = sig
   type t
   val compare : t -> t -> int
 end
 
-module type Type = sig
-  type t
+module type Show = sig
+  type t [@@deriving show]
 end
 
 module type Functor = sig
@@ -82,4 +79,24 @@ module Log = struct
   let warning msg = out "warning" msg
 end
 
+(* Exn base *)
+let fail msg = raise (Failure msg)
+
+(* Option base *)
+let some x = Some x
+let none   = None
+let guard f x =
+  try Some (f x)
+  with _ -> None
+
+(* Result base *)
+let is_ok    = function Ok _ -> true  | Error _ -> false
+let is_error = function Ok _ -> false | Error _ -> true
+
+(* Fn base *)
+let compose f g = fun x -> f (g x)
+let (<<) f g = compose f g
+let (>>) g f = compose f g
+let id x = x
+let flip f x y = f y x
 
