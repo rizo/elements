@@ -23,6 +23,3 @@ let absurd t = t.absurd
     In pithier words, {i from nothing comes anything}.
 *)
 
-module Public = struct
-end
-
