@@ -56,6 +56,17 @@ let fold f init s =
 
 let length g = fold (fun c _ -> c + 1) 0 g
 
+let rec range start ?by:(step = 1) stop =
+  if start >= stop
+    then Empty
+    else Yield (start, fun () -> range (start + step) stop ~by:step)
+
+let rec drop n s =
+  match s with
+  | s when n = 0 -> s
+  | Empty -> Empty
+  | Yield (_, s') -> drop (n - 1) (s' ())
+
 let rec of_list xs =
   match xs with
   | []      -> empty
