@@ -56,7 +56,8 @@ Library "system"
   CompiledObject: best
   BuildDepends:   elements.base, unix
   FindlibParent:  elements
-  Modules:        System
+  Modules:        System,
+                  System_io
 
 
 Library "elements"

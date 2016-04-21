@@ -1,5 +1,5 @@
 
-open Base
+module IO = System_io
 
 let time ?fmt f x =
   let t0 = Unix.gettimeofday () in
