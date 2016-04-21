@@ -1,5 +1,6 @@
 
 module Result = Data_result
+module String = Data_string
 
 open Base
 
@@ -47,11 +48,11 @@ let length l =
 
 let range i j =
   let rec up i j acc =
-    if i=j then i::acc else up i (j-1) (j::acc)
+    if i = j then i :: acc else up i (j - 1) (j :: acc)
   and down i j acc =
-    if i=j then i::acc else down i (j+1) (j::acc)
+    if i = j then i :: acc else down i (j + 1) (j :: acc)
   in
-  if i<=j then up i j [] else down i j []
+  if i <= j then up i j [] else down i j []
 
 let iota n = range 0 n
 
@@ -160,5 +161,30 @@ let rec fold_until ~init:acc ~f l =
     | `Stop acc -> acc
     end
   | [] -> acc
+
+let enum self =
+  mapi ~f:(fun i a -> (i, a)) self
+
+let string_of_char = String.make 1
+
+let show show_item self =
+  "[" ^ String.concat ", " (map ~f:show_item self) ^ "]"
+
+let window ~size ~step self =
+  assert (size >= step);
+
+  let rec loop r (curr_count, curr, next_count, next) input =
+    match input with
+    | [] -> List.rev (List.rev curr :: r)
+    | x :: xs ->
+      let (next_count', next') =
+        if curr_count >= step
+        then (next_count + 1, x :: next)
+        else (next_count, next) in
+      if curr_count < size
+      then loop r               (curr_count + 1, x :: curr, next_count', next') xs
+      else loop (rev curr :: r) (next_count',    next',     0,           [])    xs
+  in
+  loop [] (0, [], 0, []) self
 
 

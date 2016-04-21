@@ -68,3 +68,10 @@ Library "elements"
                   elements.system
   Modules:        Elements
 
+Executable "test_list"
+  Path:           tests
+  MainIs:         test_list.ml
+  BuildDepends:   elements
+  CompiledObject: byte
+  Install:        false
+
