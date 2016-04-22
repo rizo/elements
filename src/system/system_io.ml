@@ -34,3 +34,11 @@ module In_channel = struct
     loop init
 end
 
+module Labels = struct
+  module In_channel = struct
+    type t = In_channel.t
+    let input_all = In_channel.input_all
+    let fold_lines ~f ~init self = In_channel.fold_lines f init self
+  end
+end
+
