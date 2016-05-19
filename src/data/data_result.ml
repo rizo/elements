@@ -1,6 +1,4 @@
 
-type ('a, 'e) t = ('a, 'e) Base.result
-
 (* Base definitions *)
 
 let ok    x  = Base.ok

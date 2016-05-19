@@ -5,10 +5,6 @@ type ('a, 'b) either =
   | Left  of 'a
   | Right of 'b
 
-type ('a, 'e) result =
-  | Ok  of 'a
-  | Error of 'e
-
 let ok x = Ok x
 let error x = Error x
 
