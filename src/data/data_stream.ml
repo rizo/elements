@@ -124,7 +124,7 @@ module type S = sig
   val elem_index : 'a -> 'a t -> int option
   val elem_indices : 'a -> 'a t -> int list
   val empty : 'a t -> bool
-  val filter : ('a -> bool) -> 'a t -> 't
+  val filter : ('a -> bool) -> 'a t -> 'a t
   val filter_map : ('a -> 'b option) -> 'a t -> 'b t
   val find : ('a -> bool) -> 'a t -> 'a t
   val find_index : ('a -> bool) -> 'a list -> int option
