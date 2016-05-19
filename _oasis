@@ -28,6 +28,7 @@ Library "data"
   FindlibParent:  elements
   Modules:        Data,
                   Data_array,
+                  Data_char,
                   Data_counter,
                   Data_either,
                   Data_float,
@@ -58,7 +59,6 @@ Library "system"
   FindlibParent:  elements
   Modules:        System,
                   System_io
-
 
 Library "elements"
   Path:           src

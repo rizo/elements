@@ -1,44 +1,64 @@
 
 type 'a t = 'a option
-exception No_value
 
-let some = Base.some
-let none = Base.none
+(* Base definitions *)
 
-let option ~none:if_none ~some:if_some opt =
-  match opt with
-  | None -> Lazy.force if_none
-  | Some a -> if_some a
+let some    = Base.some
+let none    = Base.none
+let is_some = Base.is_some
+let is_none = Base.is_none
+let option  = Base.option
 
-let value_exn opt =
-  match opt with
+
+(* Value extraction *)
+
+(** Examples:
+
+    assert (force (List.head [1; 2; 3]) = 1)
+ *)
+let force self =
+  match self with
   | Some x -> x
-  | None -> raise No_value
+  | None -> raise (Failure "Option.force")
 
-let value ~default opt =
-  match opt with
+
+(** Examples:
+
+    assert (safe 0 (List.head []) + 1 = 1)
+ *)
+let safe default self =
+  match self with
   | Some x -> x
   | None -> default
 
-let return x = Some x
 
-let guard  = Base.guard
+(** Examples:
+    assert (catch (List.head [])
+                  (fun e -> Debug.log e; 0)
+             = 0)
+*)
+let catch self f =
+  match self with
+  | Some x -> x
+  | None -> f ()
+
+
+(* Functor instance *)
+
+let map f self =
+  match self with
+  | Some x -> Some (f x)
+  | none   -> none
+
+(* Monad instance *)
+
+let return x = Some x
 
 let (>>=) opt f =
   match opt with
   | Some x -> f x
   | None -> None
 
-let (>>|) opt f =
-  match opt with
-  | Some x -> Some (f x)
-  | None -> None
-
 let (>>) opt1 opt2 =
   opt1 >>= fun _ -> opt2
-
-let (||) opt default =
-  value ~default opt
-
-let (!) opt = value_exn opt
 

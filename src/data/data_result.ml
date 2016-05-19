@@ -1,31 +1,58 @@
 
-open Base
+type ('a, 'e) t = ('a, 'e) Base.result
 
-type ('a, 'e) t = ('a, 'e) result
+(* Base definitions *)
 
-let (!) r =
-  match r with
-  | Ok x -> x
-  | Error exn -> raise exn
+let ok    x  = Base.ok
+let error x  = Base.error
+let is_ok    = Base.is_ok
+let is_error = Base.is_error
+let result   = Base.result
 
-let ok    x = Ok    x
-let error x = Error x
 
-let is_ok    = function (Ok _)    -> true | _ -> false
-let is_error = function (Error _) -> true | _ -> false
+(* Value extraction *)
 
-let to_option = function (Ok x) -> Some x | Error _ -> None
+(** Examples:
 
-let extract f = function
-  | Ok a -> a
-  | Error e -> f e
-
-let map f = function
-  | Ok a -> Ok (f a)
-  | e -> e
-
-let with_default default result =
-  match result with
+    assert (force (Int.read "2") + 2 = 4)
+ *)
+let force ?(msg = "Result.force") self =
+  match self with
   | Ok value -> value
-  | Error _ -> default
+  | Error _  -> raise (Failure msg)
+
+
+(** Examples:
+
+    assert (Result.safe 0 (Int.read "x") + 1 = 1)
+ *)
+let safe default self =
+  match self with
+  | Ok value -> value
+  | Error _  -> default
+
+
+(** Examples:
+
+    assert (catch (Int.read "x")
+                  (fun e -> Debug.log e; 0)
+             = 0)
+ *)
+let catch f self =
+  match self with
+  | Ok value -> value
+  | error    -> f error
+
+
+(* Functor instance *)
+
+let map f self =
+  match self with
+  | Ok a  -> Ok (f a)
+  | error -> error
+
+
+(* Conversion *)
+
+let to_option = function Ok x -> Some x | Error _ -> None
 

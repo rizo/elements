@@ -92,7 +92,7 @@ let reduce l ~f =
   | x::xs -> Ok (fold xs ~f ~init:x)
   | [] -> Error (Failure "reduce: empty list with no initial value")
 
-let reduce_exn l ~f = Result.(!) (reduce l ~f)
+let reduce_exn l ~f = Result.force (reduce l ~f)
 
 let find l ?key ~f =
   match key with

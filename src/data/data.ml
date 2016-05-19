@@ -1,5 +1,6 @@
 
 module Array   = Data_array
+module Char    = Data_char
 module Counter = Data_counter
 module Either  = Data_either
 module Float   = Data_float

@@ -26,19 +26,29 @@ module In_channel = struct
     loop ();
     Buffer.contents buffer
 
-  let fold_lines f init self =
-    let rec loop r =
-      match guard P.input_line self with
-      | Some a -> loop (f r a)
-      | None   -> r in
-    loop init
+  let rec fold_lines f (init as r) self =
+    match guard P.input_line self with
+    | Some line -> fold_lines f (f r line) self
+    | None      -> r
+
+  let rec iter_lines f self =
+    match guard P.input_line self with
+    | Some line -> let () = f line in iter_lines f self
+    | None      -> ()
 end
 
 module Labels = struct
   module In_channel = struct
     type t = In_channel.t
+
+    let stdin  = P.stdin
+    let stdout = P.stdout
+    let stderr = P.stderr
+
     let input_all = In_channel.input_all
+
     let fold_lines ~f ~init self = In_channel.fold_lines f init self
+    let iter_lines ~f       self = In_channel.iter_lines f      self
   end
 end
 

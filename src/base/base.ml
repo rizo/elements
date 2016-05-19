@@ -1,16 +1,17 @@
 
 type ordering = LT | EQ | GT
 
+type ('a, 'b) either =
+  | Left  of 'a
+  | Right of 'b
+
 type ('a, 'e) result =
-  | Ok    of 'a
+  | Ok  of 'a
   | Error of 'e
 
 let ok x = Ok x
 let error x = Error x
 
-type ('a, 'b) either =
-  | Left  of 'a
-  | Right of 'b
 
 let either f g x =
   match x with
@@ -18,6 +19,8 @@ let either f g x =
   | Right r -> g r
 
 let discard _ = ()
+
+let undefined () = raise (Failure "Elements.undefined")
 
 (* Printing and Formatting *)
 
@@ -66,11 +69,6 @@ module type Monad = sig
   val bind : 'a t -> ('a -> 'b t) -> 'b t
 end
 
-module Lazy = struct
-  include Lazy
-  let (!) = Lazy.force
-end
-
 module Log = struct
   let out level msg =
     output_line stderr (fmt "%s: %s"  level msg); flush stderr
@@ -79,19 +77,46 @@ module Log = struct
   let warning msg = out "warning" msg
 end
 
+module type Default = sig
+  type t
+  val default : unit -> t
+end
+
 (* Exn base *)
+
 let fail msg = raise (Failure msg)
 
-(* Option base *)
-let some x = Some x
-let none   = None
 let guard f x =
   try Some (f x)
   with _ -> None
 
+(* Option base *)
+
+let some x = Some x
+let none   = None
+
+let is_some = function Some _ -> true  | None -> false
+let is_none = function Some _ -> false | None -> true
+
+let option (default : 'b) (f : 'a -> 'b) (opt : 'a option) : 'b =
+  match opt with
+  | None -> default
+  | Some x -> f x
+
+
 (* Result base *)
+
+let ok    x = Ok    x
+let error x = Error x
+
 let is_ok    = function Ok _ -> true  | Error _ -> false
 let is_error = function Ok _ -> false | Error _ -> true
+
+let result (default : 'b) (f : 'a -> 'b) (res : ('a, 'e) result) : 'b =
+  match res with
+  | Ok x    -> f x
+  | Error _ -> default
+
 
 (* Fn base *)
 let compose f g = fun x -> f (g x)
