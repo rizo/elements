@@ -57,7 +57,7 @@ let return x = Some x
 let (>>=) opt f =
   match opt with
   | Some x -> f x
-  | None -> None
+  | none -> none
 
 let (>>) opt1 opt2 =
   opt1 >>= fun _ -> opt2
