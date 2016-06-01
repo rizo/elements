@@ -4,17 +4,17 @@ val stdout : out_channel
 val stderr : out_channel
 
 (* module Channel : sig *)
-    (* type t *)
-    (* type parser = Parser_combinator_todo *)
+(* type t *)
+(* type parser = Parser_combinator_todo *)
 
-    (* val get_line : t -> string *)
-    (* val put_line : string -> t *)
+(* val get_line : t -> string *)
+(* val put_line : string -> t *)
 
-    (* val get : parser -> t -> string *)
+(* val get : parser -> t -> string *)
 (* end *)
 
 module In_channel : sig
-  type t
+  type t = in_channel
   val input_all : t -> string
 
   val fold_lines : ('a -> string -> 'a) -> 'a -> t -> 'a
@@ -24,7 +24,7 @@ end
 
 module Labels : sig
   module In_channel : sig
-    type t
+    type t = in_channel
     val stdin  : in_channel
     val stdout : out_channel
     val stderr : out_channel
