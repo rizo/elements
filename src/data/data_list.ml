@@ -1,6 +1,5 @@
 
 module Result = Data_result
-module String = Data_string
 
 open Base
 
@@ -22,7 +21,8 @@ let compare ?(cmp = Pervasives.compare) a b =
   in
   loop a b
 
-let cons x xs = x::xs
+let cons = Base.cons
+let snoc = Base.snoc
 
 let fold = fold_left
 
@@ -187,4 +187,22 @@ let window ~size ~step self =
   in
   loop [] (0, [], 0, []) self
 
+
+let join sep l =
+  match l with
+  | [] -> ""
+  | hd :: tl ->
+    let str_num = ref 0 and res_len = ref 0 in
+    iter (fun s -> incr str_num; res_len := !res_len + Str.len s) l;
+    let r = Bytes.create (!res_len + Str.len sep * (!str_num - 1)) in
+    Str.unsafe_blit hd 0 r 0 (Str.len hd);
+    let pos = ref (Str.len hd) in
+    iter
+      (fun s ->
+         Str.unsafe_blit sep 0 r !pos (Str.len sep);
+         pos := !pos + Str.len sep;
+         Str.unsafe_blit s 0 r !pos (Str.len s);
+         pos := !pos + Str.len s)
+      tl;
+    Bytes.unsafe_to_string r
 

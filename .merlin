@@ -7,5 +7,6 @@ B _build/src/base
 B _build/src/data
 
 PKG ppx_deriving.std
+PKG core_bench sequence
 
 

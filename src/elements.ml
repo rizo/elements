@@ -6,4 +6,5 @@ module Control = Control
 module System  = System
 
 include Base
+include Data.Export
 

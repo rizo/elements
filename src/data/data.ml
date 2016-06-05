@@ -1,4 +1,3 @@
-
 module Array   = Data_array
 module Char    = Data_char
 module Counter = Data_counter
@@ -6,14 +5,19 @@ module Either  = Data_either
 module Float   = Data_float
 module Int     = Data_int
 module List    = Data_list
+module Opt     = Opt
 module Map     = Data_map
-module Option  = Data_option
 module Result  = Data_result
 module Stream  = Data_stream
-module String  = Data_string
-module Vector  = Data_vector
+module Str     = Str
+module Vec     = PersistentVector
+module Iter    = Iter
 module Void    = Data_void
+module Range    = Range
 
-type void      = Void.t
-type 'a vector = 'a Vector.t
+module Export = struct
+  type void = Void.t
+  type 'a vec = 'a Vec.t
+  let vec = Vec.of_list
+end
 

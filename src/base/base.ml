@@ -1,6 +1,12 @@
 
 type ordering = LT | EQ | GT
 
+let compare a b =
+  match Pervasives.compare a b with
+  | ord when ord > 0 -> GT
+  | ord when ord < 0 -> LT
+  | ord              -> EQ
+
 type ('a, 'b) either =
   | Left  of 'a
   | Right of 'b
@@ -41,7 +47,7 @@ end
 
 module type Ord = sig
   type t
-  val compare : t -> t -> int
+  val compare : t -> t -> ordering
 end
 
 module type Show = sig
@@ -115,9 +121,18 @@ let result (default : 'b) (f : 'a -> 'b) (res : ('a, 'e) result) : 'b =
 
 
 (* Fn base *)
+let id x        = x
+let flip f x y  = f y x
+let curry f x y = f (x, y)
+let uncurry f p = f (fst p) (snd p)
 let compose f g = fun x -> f (g x)
-let (<<) f g = compose f g
-let (>>) g f = compose f g
-let id x = x
-let flip f x y = f y x
+let (<<) f g    = compose f g
+let (>>) g f    = compose f g
+
+(* List base *)
+let cons x xs = x::xs
+let snoc xs x = x::xs
+
+(* Iter base. *)
+type ('a, 's) iter = 's * ('s -> ('a * 's) option)
 

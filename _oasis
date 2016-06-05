@@ -1,13 +1,14 @@
-Name: elements
-Version: 0.2.0
-License: MIT
-Authors: Rizo Isrof <rizo@odis.io>
-Homepage: http://github.com/rizo/flow
-OCamlVersion:           >= 4.02
-AlphaFeatures:          ocamlbuild_more_args
-OASISFormat: 0.4
-BuildTools: camlp4o,ocamlbuild
-Plugins: META (0.4), DevFiles (0.4)
+Name:          elements
+Version:       0.2.0
+License:       MIT
+Authors:       Rizo Isrof <rizo@odis.io>
+Homepage:      http://github.com/rizo/elements
+OCamlVersion:  >= 4.02
+AlphaFeatures: ocamlbuild_more_args
+OASISFormat:   0.4
+BuildTools:    camlp4o,ocamlbuild
+Plugins:       META (0.4), DevFiles (0.4)
+AlphaFeatures: ocamlbuild_more_args
 
 Synopsis:
   Elements is a collection of small modules, types and functions that will make
@@ -35,11 +36,13 @@ Library "data"
                   Data_int,
                   Data_list,
                   Data_map,
-                  Data_option,
+                  Opt,
+                  Iter,
+                  Range,
                   Data_result,
                   Data_stream,
-                  Data_string,
-                  Data_vector,
+                  Str,
+                  PersistentVector,
                   Data_void
 
 Library "control"
@@ -75,4 +78,27 @@ Executable "test_list"
   BuildDepends:   elements
   CompiledObject: byte
   Install:        false
+
+Executable "bench_iter"
+  Path:           bench
+  MainIs:         bench_iter.ml
+  BuildDepends:   threads, core_bench, sequence, elements
+  CompiledObject: native
+  NativeOpt:      -nodynlink -noassert -O3
+  CCOpt:          -O3 -fno-PIC
+  Install:        false
+
+Document "docs"
+  Install:              True
+  Type:                 ocamlbuild (0.4)
+  BuildTools:           ocamlbuild, ocamldoc
+  Title:                Elements API Reference
+  XOCamlbuildPath:      .
+  XOCamlbuildLibraries: elements,
+                        elements.base,
+                        elements.data,
+                        elements.control,
+                        elements.system
+  XOCamlbuildExtraArgs:
+    "-docflags '-colorize-code -short-functors -charset utf-8'"
 
