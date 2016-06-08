@@ -206,3 +206,13 @@ let join sep l =
       tl;
     Bytes.unsafe_to_string r
 
+let partition2 should_partition input =
+  let rec loop input acc acctemp last_item =
+    match input with
+    | [] -> rev (rev acctemp :: acc) 
+    | next :: tail when should_partition last_item next ->
+      loop tail (rev acctemp :: acc) [next] next
+    | next :: tail -> loop tail acc (next::acctemp) next in
+  match input with
+  | x :: xs -> loop xs [] [x] x
+  | []      -> []
