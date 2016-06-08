@@ -1,5 +1,9 @@
 
+open Base
+
 (* Base definitions *)
+
+type ('a, 'e) t = ('a, 'e) Base.result
 
 let ok    x  = Base.ok
 let error x  = Base.error

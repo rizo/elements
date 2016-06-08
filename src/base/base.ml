@@ -8,6 +8,7 @@ type ('a, 'b) either =
 let ok x = Ok x
 let error x = Error x
 
+type ('a, 'e) result = Ok of 'a | Error of 'e
 
 let either f g x =
   match x with
