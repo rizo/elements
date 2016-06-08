@@ -1,14 +1,14 @@
 
 type ordering = LT | EQ | GT
 
+type ('a, 'e) result = Ok of 'a | Error of 'e
+
 type ('a, 'b) either =
   | Left  of 'a
   | Right of 'b
 
 let ok x = Ok x
 let error x = Error x
-
-type ('a, 'e) result = Ok of 'a | Error of 'e
 
 let either f g x =
   match x with
