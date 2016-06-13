@@ -48,7 +48,7 @@ let catch self f =
 let map f self =
   match self with
   | Some x -> Some (f x)
-  | none   -> none
+  | none   -> None
 
 (* Monad instance *)
 
@@ -57,7 +57,7 @@ let return x = Some x
 let (>>=) opt f =
   match opt with
   | Some x -> f x
-  | none -> none
+  | none -> None
 
 let (>>) opt1 opt2 =
   opt1 >>= fun _ -> opt2
