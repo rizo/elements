@@ -32,6 +32,19 @@ let test_window () =
     assert (List.window ~size:5 ~step:3 input1 = output2);
   end
 
-let () =
-  test_window ()
+ let test_partition2 () =
+  let l1 = [1; 2; 3; 20; 23; 25; 40; 47; 49; 52] in
+  let r1 = [[1; 2; 3]; [20; 23; 25]; [40; 47; 49; 52]] in
+  let l2 = []  and r2 = [] in
+  let l3 = [1] and r3 = [[1]] in
+  begin
+    assert (List.partition2 (fun a b -> b - a > 10) l1 = r1);
+    assert (List.partition2 (fun a b -> b - a > 10) l2 = r2);
+    assert (List.partition2 (fun a b -> b - a > 10) l3 = r3)
+  end
 
+let () =
+  begin
+    test_window ();
+    test_partition2 ()
+  end
