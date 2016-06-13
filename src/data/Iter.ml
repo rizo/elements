@@ -95,7 +95,7 @@ module Make(M : Iterable) = struct
       match next s with
       | None -> acc
       | Some (a, s') -> loop (f acc a) s' in
-    Opt.map (uncurry loop) (next s)
+    Option.map (uncurry loop) (next s)
 
   let fold_while p f acc this =
     let (init, next) = M.iter this in
@@ -156,7 +156,7 @@ module Make(M : Iterable) = struct
 
   let head this =
     let (init, next) = M.iter this in
-    Opt.map fst (next init)
+    Option.map fst (next init)
 
   let elem ?(eq = (=)) a this = fail "not implemented"
 
