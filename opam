@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "0.0.10"
+version: "0.0.11"
 maintainer: "Rizo Isrof <rizo@odis.io>"
 authors: [ "Rizo Isrof <rizo@odis.io>" ]
 license: "MIT"
@@ -26,3 +26,5 @@ depends: [
   "oasis" {build & >= "0.4"}
   "ocamlfind" {build}
 ]
+available: [ ocaml-version = "4.03.0" ]
+
