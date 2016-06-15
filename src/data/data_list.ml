@@ -207,6 +207,14 @@ let join sep l =
       tl;
     Bytes.unsafe_to_string r
 
-
-
+let partition2 p input =
+  let rec loop input acc tmp a =
+    match input with
+    | [] -> rev (rev tmp :: acc)
+    | b :: rest when p a b ->
+      loop rest (rev tmp :: acc) [b] b
+    | b :: rest -> loop rest acc (b :: tmp) b in
+  match input with
+  | a :: rest -> loop rest [] [a] a
+  | []        -> []
 
