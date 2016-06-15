@@ -34,5 +34,5 @@ Elements
 
 ## Contributors
 
-- Rafael Amaral (@BrsaAmaral)
-- Nuno Cravino (@ncravino)
+- Rafael Amaral ([@BrsaAmaral](https://github.com/BrsaAmaral))
+- Nuno Cravino ([@ncravino](https://github.com/ncravino))
