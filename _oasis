@@ -1,9 +1,9 @@
 Name:          elements
-Version:       0.2.0
+Version:       0.11.0
 License:       MIT
 Authors:       Rizo Isrof <rizo@odis.io>
 Homepage:      http://github.com/rizo/elements
-OCamlVersion:  >= 4.02
+OCamlVersion:  >= 4.03
 AlphaFeatures: ocamlbuild_more_args
 OASISFormat:   0.4
 BuildTools:    camlp4o,ocamlbuild
