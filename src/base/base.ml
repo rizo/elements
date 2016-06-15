@@ -14,6 +14,11 @@ type ('a, 'b) either =
 let ok x = Ok x
 let error x = Error x
 
+external first  : 'a * 'b -> 'a = "%field0"
+external second : 'a * 'b -> 'b = "%field1"
+external ignore : 'a -> unit    = "%ignore"
+external ( |> ) : 'a -> ('a -> 'b) -> 'b = "%revapply"
+external ( @  ) : ('a -> 'b) -> 'a -> 'b = "%apply"
 
 let either f g x =
   match x with

@@ -47,7 +47,7 @@ assert (Vec.get v1 0 = Some "hello")
 ]} *)
 
 
-val is_empty : 'a t -> bool
+(* val is_empty : 'a t -> bool *)
 (** [Vec.is_empty v] is [True] if the vector [v] is empty.
 
     {b Complexity:} {e O(1)}
@@ -148,7 +148,7 @@ assert (Vec.len v1 = 3);
 assert (Vec.get v1 0 = Some 'a')
 ]} *)
 
-val iter : 'a t -> ('a, 's) iter
+(* val iter : 'a t -> ('a, 's) iter *)
 (** [Vec.iter v] returns an iterator for the vector [v].
 
     {b Complexity:} {e O(1)}
@@ -162,7 +162,7 @@ let iter   = Vec.iter v1 in
 assert (Iter.next iter = Some ("red", 1));
 ]} *)
 
-val fold : ('r -> 'a -> 'r) -> 'r -> 'a t -> 'r
+(* val fold : ('r -> 'a -> 'r) -> 'r -> 'a t -> 'r *)
 (** [Vec.fold step init v] reduces the vector elements with the functin [step]
     starting with initial value [init].
 
@@ -177,7 +177,7 @@ assert (Vec.fold (+) 0 v1 = 10);
 ]} *)
 
 
-val map : ('a -> 'b) -> 'a t -> 'b t
+(* val map : ('a -> 'b) -> 'a t -> ('a, int) iter *)
 (** [Vec.map f v] maps the function [f] over the elements of the vector [v]
     producing a vector with transformed elements.
 
@@ -192,7 +192,7 @@ assert (Vec.map (Int.to_str) v1 = vec ["1"; "2"; "3"; "4"]);
 ]} *)
 
 
-val filter : ('a -> bool) -> 'a t -> 'a t
+(* val filter : ('a -> bool) -> 'a t -> ('a, int) iter *)
 (** [Vec.filter pred v] produces a new vector with elements from vector [v] for
     which the predicate [perd] returns [true].
 
@@ -207,7 +207,7 @@ assert (Vec.filter (fun a -> a > 0) v1 = vec [1; 2; 4; 5]);
 ]} *)
 
 
-val each : ('a -> unit) -> 'a t -> unit
+(* val each : ('a -> unit) -> 'a t -> unit *)
 (** [Vec.each f v] applies the function [f] to the elements of the vector [v]
     discarding the results. Should be used for effectful iterations.
 
@@ -226,7 +226,7 @@ assert (Vec.each print v1 = ());
 ]} *)
 
 
-val join : string -> string t -> string
+(* val join : string -> string t -> string *)
 (** [Vec.join sep v] joins vector elements (which should be strings) together
     as a new string, inserting a separator between each.
 

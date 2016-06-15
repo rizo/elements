@@ -7,15 +7,16 @@ module Counter = Data_counter
 module Either  = Data_either
 module Float   = Data_float
 module Int     = Data_int
-module Opt     = Opt
 module List    = Data_list
+module Option  = Data_option
 module Map     = Data_map
 module Result  = Data_result
 module Stream  = Data_stream
-module Str     = Str
-module Vec     = PersistentVector
+module String  = Data_string
+module Vec     = Data_persistent_vector
+module Iter    = Data_iter
 module Void    = Data_void
-module Range    = Range
+module Range   = Data_range
 
 module Export : sig
   type void = Void.t

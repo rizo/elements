@@ -1,5 +1,6 @@
 
 module Result = Data_result
+module String = Data_string
 
 open Base
 
@@ -193,16 +194,19 @@ let join sep l =
   | [] -> ""
   | hd :: tl ->
     let str_num = ref 0 and res_len = ref 0 in
-    iter (fun s -> incr str_num; res_len := !res_len + Str.len s) l;
-    let r = Bytes.create (!res_len + Str.len sep * (!str_num - 1)) in
-    Str.unsafe_blit hd 0 r 0 (Str.len hd);
-    let pos = ref (Str.len hd) in
+    iter (fun s -> incr str_num; res_len := !res_len + String.len s) l;
+    let r = Bytes.create (!res_len + String.len sep * (!str_num - 1)) in
+    String.unsafe_blit hd 0 r 0 (String.len hd);
+    let pos = ref (String.len hd) in
     iter
       (fun s ->
-         Str.unsafe_blit sep 0 r !pos (Str.len sep);
-         pos := !pos + Str.len sep;
-         Str.unsafe_blit s 0 r !pos (Str.len s);
-         pos := !pos + Str.len s)
+         String.unsafe_blit sep 0 r !pos (String.len sep);
+         pos := !pos + String.len sep;
+         String.unsafe_blit s 0 r !pos (String.len s);
+         pos := !pos + String.len s)
       tl;
     Bytes.unsafe_to_string r
+
+
+
 

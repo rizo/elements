@@ -1,12 +1,12 @@
 (* Persistent bit-partitioned Vector Trie *)
 
-module Array = Data_array
-module List  = Data_list
+(* Indexed finite iterable. *)
+
+module Array  = Data_array
+module List   = Data_list
+module String = Data_string
 
 open Base
-
-let shift_by = 5
-let trie_len = int_of_float (2.0 ** float_of_int shift_by)
 
 type 'a t = {
   root   : 'a node array;   (* Root node links. *)
@@ -19,6 +19,9 @@ and 'a node =
   | Link of 'a node array   (* Branch node with links to other nodes. *)
   | Data of 'a array        (* Leaf node holds the actual data values. *)
   [@@deriving show]
+
+let shift_by = 5
+let trie_len = int_of_float (2.0 ** float_of_int shift_by)
 
 (* O(1) *)
 let empty : 'a t = {
@@ -35,9 +38,6 @@ let singleton a = {
   shift  = shift_by;
   tail   = [| a |];
 }
-
-(* O(1) *)
-let is_empty v = v.length = 0
 
 (* O(1) *)
 let len v = v.length
@@ -71,10 +71,14 @@ let unsafe_get v idx =
   Array.get (data node) (idx land (trie_len - 1))
 
 (* O(log32(n)) ~ O(1) *)
-let get v idx =
-  if idx < 0 || idx >= len v
-  then None
-  else Some (unsafe_get v idx) (* It's safe now. *)
+let get v n =
+  let l = v.length in
+  if n >= l then None
+  else
+    let n = if n < 0 then l - n else n in
+    Some (unsafe_get v n)
+
+(* O(log32(n)) ~ O(1) *)
 
 let rec new_path level tail =
   if level = 0 then Data tail
@@ -91,16 +95,16 @@ let rec push_tail length level (parent : 'a node array) tail : 'a node array =
     let target  = Data tail in
     let parent' = Array.copy_and_add parent target in
     parent'
-    (* Maps to existing child.
-       Replace the child with a link to target. *)
+  (* Maps to existing child.
+     Replace the child with a link to target. *)
   else if sub_idx < Array.length parent then
-    let child   = Array.get parent sub_idx in
-    let target  = Link (push_tail length (level - shift_by) (link child) tail) in
-    let parent' = Array.copy parent in
-    Array.set parent' sub_idx target;
-    parent'
-    (* Does not map to existing child.
-       Create a link and add path. *)
+     let child   = Array.get parent sub_idx in
+     let target  = Link (push_tail length (level - shift_by) (link child) tail) in
+     let parent' = Array.copy parent in
+     Array.set parent' sub_idx target;
+     parent'
+  (* Does not map to existing child.
+     Create a link and add path. *)
   else
     let target  = new_path (level - shift_by) tail in
     let parent' = Array.copy_and_add parent target in
@@ -116,17 +120,17 @@ let add v x =
        Return the updated vector with incremented length and a new tail. *)
   if v.length land (trie_len - 1) <> 0 then
     { v with length = v.length + 1;
-             tail   = Array.copy_and_add v.tail x }
-    (* Root overflow
-       The current length requires another shift.
-       Replace the current root with a new one and add the tail to the tree. *)
+                tail   = Array.copy_and_add v.tail x }
+  (* Root overflow
+     The current length requires another shift.
+     Replace the current root with a new one and add the tail to the tree. *)
   else if v.length lsr shift_by > 1 lsl v.shift then
     { length = v.length + 1;
       shift  = v.shift  + shift_by;
       tail   = [| x |];
       root   = [| Link v.root; new_path v.shift v.tail |] }
-    (* Update the tree.
-       Push the tail to the root. *)
+  (* Update the tree.
+     Push the tail to the root. *)
   else
     { length = v.length + 1;
       shift  = v.shift;
@@ -136,57 +140,11 @@ let add v x =
 let of_list l =
   List.fold_left ~f:(fun v x -> add v x) ~init:empty l
 
+let add_from_list init l =
+  List.fold_left ~f:(fun v x -> add v x) ~init l
+
 let each f v =
-  for i = 0 to len v - 1 do
+  for i = 0 to v.length - 1 do
     f (unsafe_get v i)
   done
-
-let fold f init v =
-  let r = ref init in
-  for i = 0 to len v - 1 do
-    r := f !r (unsafe_get v i)
-  done;
-  !r
-
-let iter v =
-  fail "todo"
-  (* let vlen = len v in *)
-  (* let next i = *)
-    (* if i < vlen *)
-    (* then Some (unsafe_get v i, i + 1) *)
-    (* else None in *)
-  (* (0, next) *)
-
-let map f v =
-  fold (fun acc a -> add acc (f a)) empty v
-
-let filter p v =
-  fold (fun acc a -> if p a then add acc a else acc) empty v
-
-let sum v =
-  fold (+) 0 v
-
-let to_list v =
-  List.rev (fold (fun r a -> a :: r) [] v)
-
-let join sep v =
-  if is_empty v then ""
-  else
-    let fst_str = unsafe_get v 0 in
-    let fst_len = Str.len fst_str in
-    let sep_len = Str.len sep in
-    let len_acc = fold (fun len_acc s -> len_acc + Str.len s) 0 v in
-    let res_len = (sep_len * (len v - 1)) + len_acc in
-    let res_str = Bytes.create res_len in
-    Str.unsafe_blit fst_str 0 res_str 0 fst_len;
-    let res_pos = ref fst_len in
-    for i = 1 to len v - 1 do
-      let str     = unsafe_get v i in
-      let str_len = Str.len str in
-      Str.unsafe_blit sep 0 res_str !res_pos sep_len;
-      res_pos := !res_pos + sep_len;
-      Str.unsafe_blit str 0 res_str !res_pos str_len;
-      res_pos := !res_pos + str_len
-    done;
-    Bytes.unsafe_to_string res_str
 

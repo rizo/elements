@@ -36,13 +36,13 @@ Library "data"
                   Data_int,
                   Data_list,
                   Data_map,
-                  Opt,
-                  Iter,
-                  Range,
+                  Data_option,
+                  Data_iter,
+                  Data_range,
                   Data_result,
                   Data_stream,
-                  Str,
-                  PersistentVector,
+                  Data_string,
+                  Data_persistent_vector,
                   Data_void
 
 Library "control"
