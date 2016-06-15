@@ -14,7 +14,6 @@ Elements
  │  ├── Array
  │  ├── Char
  │  ├── Counter
- │  ├── Dict
  │  ├── Either
  │  ├── Float
  │  ├── Int
@@ -22,7 +21,7 @@ Elements
  │  ├── List
  │  ├── Map
  │  ├── Option
- │  ├── Persistent_vector
+ │  ├── Vec
  │  ├── Range
  │  ├── Result
  │  ├── Stream
