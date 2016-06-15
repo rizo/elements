@@ -57,7 +57,7 @@ struct
     List.rev (fold map ~init:[] ~f:(fun ~key ~data acc -> (key, data)::acc))
 
   let add_assoc m l =
-    List.fold_left ~f:(fun m (k,v) -> add k v m) ~init:m l
+    List.foldl (fun m (k,v) -> add k v m) m l
 
   let of_assoc a = add_assoc empty a
 

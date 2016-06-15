@@ -28,8 +28,8 @@ let test_window () =
   and output1 = [[0; 1; 2]; [2; 3; 4]; [4; 5; 6]; [6; 7; 8]; [8; 9]]
   and output2 = [[0; 1; 2; 3; 4]; [3; 4; 5; 6; 7]; [6; 7; 8; 9]]
   in begin
-    assert (List.window ~size:3 ~step:2 input1 = output1);
-    assert (List.window ~size:5 ~step:3 input1 = output2);
+    assert (List.window 3 2 input1 = output1);
+    assert (List.window 5 3 input1 = output2);
   end
 
  let test_partition2 () =

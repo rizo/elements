@@ -138,10 +138,10 @@ let add v x =
       root   = push_tail v.length v.shift v.root v.tail }
 
 let of_list l =
-  List.fold_left ~f:(fun v x -> add v x) ~init:empty l
+  List.foldl (fun v x -> add v x) empty l
 
 let add_from_list init l =
-  List.fold_left ~f:(fun v x -> add v x) ~init l
+  List.foldl (fun v x -> add v x) init l
 
 let each f v =
   for i = 0 to v.length - 1 do
