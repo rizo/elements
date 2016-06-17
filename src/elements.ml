@@ -1,5 +1,5 @@
 
-let version = "0.2.0"
+let version = "0.11.0"
 
 module Data    = Data
 module Control = Control
