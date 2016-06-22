@@ -1,10 +1,11 @@
 
-let version = "0.11.0"
+let version = "0.13.0"
 
-module Data    = Data
 module Control = Control
 module System  = System
+module IO      = System.IO
 
 include Base
-include Data.Export
+include Data
+
 

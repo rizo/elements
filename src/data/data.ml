@@ -15,9 +15,10 @@ module Iter    = Data_iter
 module Void    = Data_void
 module Range   = Data_range
 
-module Export = struct
-  type void = Void.t
-  type 'a vec = 'a Vec.t
-  let vec = Vec.of_list
-end
+type void = Void.t
+
+type 'a vec = 'a Vec.t
+
+let vec = Vec.of_list
+
 
