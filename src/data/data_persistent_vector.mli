@@ -1,6 +1,8 @@
 
 open Base
 
+module Iter = Data_iter
+
 (** Persistent bit-partitioned Vector Trie.
 
     {b Examples:}
@@ -97,8 +99,8 @@ assert (Vec.get v1 4 = None)
 ]} *)
 
 
-val unsafe_get : 'a t -> int -> 'a
-(** [Vec.unsafe_get i v] returns the element of the vector [v] at the index
+val idx : 'a t -> int -> 'a
+(** [Vec.idx i v] returns the element of the vector [v] at the index
     [i].
 
     @raise Invalid_argument if the index is out of bounds.
@@ -110,7 +112,7 @@ val unsafe_get : 'a t -> int -> 'a
 {[
 let v1 = vec ['a'; 'b'; 'c'; 'd'] in
 
-assert (Vec.unsafe_get v1 1 = 'b');
+assert (Vec.idx v1 1 = 'b');
 assert (try
           discard (Vec.unsafe_get v1 4);
           false
@@ -254,4 +256,7 @@ let v1 = [1; 1; 2; 3; 5; 8] in
 
 assert (Vec.show Int.pp v1 = "[1; 1; 2; 3; 5; 8]")
 ]} *)
+
+
+include Iter.Index.Ext with type 'a t := 'a t
 

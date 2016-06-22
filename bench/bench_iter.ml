@@ -76,18 +76,15 @@ let array_iter_stop_record a =
   let stop state = (state = len) in
   {init=0; next; stop}
 
+let id x = x
 
 let () =
   let open Core_bench.Std in
   print_endline "Iterators implementation benchmark.";
-  let input = Array.make 100000 42000 in
-  let bench n = Bench.Test.create ~name:n in
+  let bench  n   = Bench.Test.create ~name:n in
+  let benchi n a = Bench.Test.create_indexed ~name:n ~args:a in
   Core.Command.run (Bench.make_command [
-      (* bench "iter_option_record" (fun () -> fold_option_record (+) 0 (array_iter_option_record input)); *)
-      bench "array_fold"         (fun () -> Array.fold_left    (+) 0 input);
+      bench "array_fold"        (fun () -> Array.fold_left    (+) 0 input);
       bench "iter_option"        (fun () -> fold_option        (+) 0 (array_iter_option input));
-      (* bench "iter_stop"          (fun () -> fold_stop        (+) 0 (array_iter_stop   input)); *)
-      (* bench "iter_stop_record"   (fun () -> fold_stop_record (+) 0 (array_iter_stop_record input)); *)
-      (* bench "sequence"           (fun () -> Sequence.fold    (+) 0 (Sequence.of_array input)); *)
     ])
 

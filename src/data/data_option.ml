@@ -8,6 +8,7 @@ let none    = Base.none
 let is_some = Base.is_some
 let is_none = Base.is_none
 let option  = Base.option
+let (//)    = Base.(//)
 
 
 (* Value extraction *)
@@ -49,6 +50,7 @@ let map (f : 'a -> 'b) (this : 'a option) : 'b option =
   match this with
   | Some x -> Some (f x)
   | None   -> None
+
 
 (* Monad instance *)
 

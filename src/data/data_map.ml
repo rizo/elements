@@ -1,6 +1,4 @@
 
-module List = Data_list
-
 type 'a printer = Buffer.t -> 'a -> unit
 type 'a formatter = Format.formatter -> 'a -> unit
 
@@ -57,7 +55,7 @@ struct
     List.rev (fold map ~init:[] ~f:(fun ~key ~data acc -> (key, data)::acc))
 
   let add_assoc m l =
-    List.foldl (fun m (k,v) -> add k v m) m l
+    List.fold_left (fun m (k,v) -> add k v m) m l
 
   let of_assoc a = add_assoc empty a
 

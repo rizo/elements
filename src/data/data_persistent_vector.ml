@@ -5,13 +5,14 @@
 module Array  = Data_array
 module List   = Data_list
 module String = Data_string
+module Iter   = Data_iter
 
 open Base
 
 type 'a t = {
   root   : 'a node array;   (* Root node links. *)
   tail   : 'a array;        (* A pointer to the tail of the vector. *)
-  length : int;             (* The length of the vector. *)
+  len    : int;             (* The len of the vector. *)
   shift  : int;             (* Current maximum index shift. *)
 } [@@deriving show]
 
@@ -26,7 +27,7 @@ let trie_len = int_of_float (2.0 ** float_of_int shift_by)
 (* O(1) *)
 let empty : 'a t = {
   root   = [| |];
-  length = 0;
+  len = 0;
   tail   = [| |];
   shift  = shift_by;
 }
@@ -34,13 +35,13 @@ let empty : 'a t = {
 (* O(1) *)
 let singleton a = {
   root   = [| |];
-  length = 1;
+  len = 1;
   shift  = shift_by;
   tail   = [| a |];
 }
 
 (* O(1) *)
-let len v = v.length
+let len v = v.len
 
 let link = function
   | Link a -> a
@@ -50,36 +51,27 @@ let data = function
   | Data a -> a
   | Link a -> fail "data request on link node"
 
-let tail_offset length =
-  if length < 32 then 0
-  else ((length - 1) lsr shift_by) lsl shift_by
+let tail_offset len =
+  if len < 32 then 0
+  else ((len - 1) lsr shift_by) lsl shift_by
 
 let node_with_index v idx =
-  if idx >= tail_offset v.length
+  if idx >= tail_offset v.len
   then Data v.tail
   else
     let rec loop level node =
       if level = 0 then node
       else
         let sub_idx = (idx lsr level) land (trie_len - 1) in
-        loop (level - shift_by) (Array.get (link node) sub_idx) in
-    loop (v.shift - shift_by) (Array.get v.root (idx lsr v.shift))
+        loop (level - shift_by) (Array.get_exn (link node) sub_idx) in
+    loop (v.shift - shift_by) (Array.get_exn v.root (idx lsr v.shift))
 
 (* O(log32(n)) ~ O(1) *)
-let unsafe_get v idx =
+let idx v idx =
   let node = node_with_index v idx in
-  Array.get (data node) (idx land (trie_len - 1))
+  Array.get_exn (data node) (idx land (trie_len - 1))
 
 (* O(log32(n)) ~ O(1) *)
-let get v n =
-  let l = v.length in
-  if n >= l then None
-  else
-    let n = if n < 0 then l - n else n in
-    Some (unsafe_get v n)
-
-(* O(log32(n)) ~ O(1) *)
-
 let rec new_path level tail =
   if level = 0 then Data tail
   else Link [| new_path (level - shift_by) tail |]
@@ -88,8 +80,8 @@ let rec new_path level tail =
    If the parent is a leaf node, add the tail as a Data node.
    If index maps to the existing child, extend the child with a Link to tail.
    Otherwise add a new child to parent with a tail node. *)
-let rec push_tail length level (parent : 'a node array) tail : 'a node array =
-  let sub_idx = ((length - 1) lsr level) land (trie_len - 1) in
+let rec push_tail len level (parent : 'a node array) tail : 'a node array =
+  let sub_idx = ((len - 1) lsr level) land (trie_len - 1) in
   (* Parent is a leaf node. *)
   if level = shift_by then
     let target  = Data tail in
@@ -97,9 +89,9 @@ let rec push_tail length level (parent : 'a node array) tail : 'a node array =
     parent'
   (* Maps to existing child.
      Replace the child with a link to target. *)
-  else if sub_idx < Array.length parent then
-     let child   = Array.get parent sub_idx in
-     let target  = Link (push_tail length (level - shift_by) (link child) tail) in
+  else if sub_idx < Array.len parent then
+     let child   = Array.get_exn parent sub_idx in
+     let target  = Link (push_tail len (level - shift_by) (link child) tail) in
      let parent' = Array.copy parent in
      Array.set parent' sub_idx target;
      parent'
@@ -112,39 +104,41 @@ let rec push_tail length level (parent : 'a node array) tail : 'a node array =
 
 (* O(log32(n)) ~ O(1) *)
 let add v x =
-  if v.length = 0 then singleton x
+  if v.len = 0 then singleton x
   else
     (* Tail update.
        Tail node has room for another element.
        Duplicate the old tail and add a new element.
-       Return the updated vector with incremented length and a new tail. *)
-  if v.length land (trie_len - 1) <> 0 then
-    { v with length = v.length + 1;
+       Return the updated vector with incremented len and a new tail. *)
+  if v.len land (trie_len - 1) <> 0 then
+    { v with len = v.len + 1;
                 tail   = Array.copy_and_add v.tail x }
   (* Root overflow
-     The current length requires another shift.
+     The current len requires another shift.
      Replace the current root with a new one and add the tail to the tree. *)
-  else if v.length lsr shift_by > 1 lsl v.shift then
-    { length = v.length + 1;
+  else if v.len lsr shift_by > 1 lsl v.shift then
+    { len = v.len + 1;
       shift  = v.shift  + shift_by;
       tail   = [| x |];
       root   = [| Link v.root; new_path v.shift v.tail |] }
   (* Update the tree.
      Push the tail to the root. *)
   else
-    { length = v.length + 1;
+    { len = v.len + 1;
       shift  = v.shift;
       tail   = [| x |];
-      root   = push_tail v.length v.shift v.root v.tail }
+      root   = push_tail v.len v.shift v.root v.tail }
 
 let of_list l =
-  List.foldl (fun v x -> add v x) empty l
+  List.fold (fun v x -> add v x) empty l
 
 let add_from_list init l =
-  List.foldl (fun v x -> add v x) init l
+  List.fold (fun v x -> add v x) init l
 
-let each f v =
-  for i = 0 to v.length - 1 do
-    f (unsafe_get v i)
-  done
+include Iter.Index.Make(struct
+    type nonrec 'a t = 'a t
+    let len = len
+    let idx = idx
+  end)
+
 

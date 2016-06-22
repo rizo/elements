@@ -1,30 +1,12 @@
 
+module Iter = Data_iter
+
 open Base
 
-type input  = { chan : in_channel  }
-type output = { chan : out_channel }
+module Chan = struct
+  type input  = { chan : in_channel  }
+  type output = { chan : out_channel }
 
-module File : sig
-  type 'a t
-
-  val open_in  : string -> input t
-
-  val open_out : string -> output t
-
-  val stdin : input t
-
-  val stdout : output t
-
-  val stderr : output t
-
-  val read_char : input t -> char option
-
-  val read_line : input t -> string option
-
-  val read_all : input t -> string option
-
-  val write_char : output t -> char -> unit
-end = struct
   type 'a t =
     | In  : input  -> input t
     | Out : output -> output t
@@ -32,9 +14,8 @@ end = struct
   let open_in  name = In  { chan = open_in  name }
   let open_out name = Out { chan = open_out name }
 
-  let stdin  = In  { chan = Pervasives.stdin  }
-  let stdout = Out { chan = Pervasives.stdout }
-  let stderr = Out { chan = Pervasives.stderr }
+  let of_in  chan = In  { chan }
+  let of_out chan = Out { chan }
 
   let read_char (In {chan}) =
     try Some (Pervasives.input_char chan)
@@ -64,19 +45,30 @@ end = struct
   let write_char (Out {chan}) c =
     Pervasives.output_char chan c
 
-  let rec fold_lines f (init as r) (In {chan} as self) =
-    match guard Pervasives.input_line chan with
-    | Some line -> fold_lines f (f r line) self
-    | None      -> r
+  module Lines = Iter.Input.Make0(struct
+      type nonrec t = input t
+      type item = string
 
-  let rec iter_lines f (In {chan} as self) =
-    match guard Pervasives.input_line chan with
-    | Some line -> let () = f line in iter_lines f self
-    | None      -> ()
+      let iter (In {chan}) =
+        let rec next chan =
+          try Some (input_line chan, chan)
+          with End_of_file -> None in
+        Iter (chan, next)
+    end)
 
+  module Chars = Iter.Input.Make0(struct
+      type nonrec t = input t
+      type item = char
+
+      let iter (In {chan}) =
+        let rec next chan =
+          try Some (input_char chan, chan)
+          with End_of_file -> None in
+        Iter (chan, next)
+    end)
 end
 
-let stdin  = File.stdin
-let stdout = File.stdout
-let stderr = File.stderr
+let stdin  = Chan.of_in  Pervasives.stdin
+let stdout = Chan.of_out Pervasives.stdout
+let stderr = Chan.of_out Pervasives.stderr
 

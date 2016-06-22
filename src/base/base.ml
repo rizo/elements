@@ -25,7 +25,7 @@ let either f g x =
   | Left  l -> f l
   | Right r -> g r
 
-let discard _ = ()
+let ignore _ = ()
 
 let undefined () = raise (Failure "Elements.undefined")
 
@@ -110,6 +110,10 @@ let option (default : 'b) (f : 'a -> 'b) (opt : 'a option) : 'b =
   | None -> default
   | Some x -> f x
 
+let (//) opt default =
+  match opt with
+  | None   -> default
+  | Some x -> x
 
 (* Result base *)
 
@@ -138,6 +142,7 @@ let (>>) g f    = compose f g
 let cons x xs = x::xs
 let snoc xs x = x::xs
 
-(* Iter base. *)
-type ('a, 's) iter = 's * ('s -> ('a * 's) option)
+(* Iterator base *)
+type 'a iter = Iter : 's * ('s -> ('a * 's) option) -> 'a iter
+
 
