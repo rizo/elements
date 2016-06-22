@@ -79,15 +79,6 @@ Executable "test_list"
   CompiledObject: byte
   Install:        false
 
-Executable "bench_list"
-  Path:           bench
-  MainIs:         bench_list.ml
-  BuildDepends:   threads, core_bench, elements
-  CompiledObject: native
-  NativeOpt:      -nodynlink -noassert -O3
-  CCOpt:          -O3 -fno-PIC
-  Install:        false
-
 Document "docs"
   Install:              True
   Type:                 ocamlbuild (0.4)

@@ -3,7 +3,7 @@ version: "0.0.12"
 maintainer: "Rizo Isrof <rizo@odis.io>"
 authors: [ "Rizo Isrof <rizo@odis.io>" ]
 license: "MIT"
-homepage: "http://github.com/rizo/flow"
+homepage: "http://github.com/rizo/elements"
 dev-repo: "https://github.com/rizo/elements.git"
 bug-reports: "https://github.com/rizo/elements/issues"
 build: [
