@@ -114,7 +114,19 @@ let map f (Iter (s0, next)) =
     | None -> None in
   Iter (s0, next')
 
-let filter_map p iterable           = failwith "todo"
+let filter_map f (Iter (s0, next)) =
+  let next' s =
+    let rec loop s =
+      match next s with
+      | Some (a, s') ->
+        begin match f a with
+          | Some b -> Some (b, s')
+          | None -> loop s'
+        end
+      | None -> None in
+    loop s in
+  Iter (s0, next')
+
 let find p iterable                 = failwith "todo"
 let find_index p iterable           = failwith "todo"
 let find_indices p iterable         = failwith "todo"
