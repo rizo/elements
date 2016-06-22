@@ -63,9 +63,10 @@ let reduce f iter =
   (* match head iter with *)
   (* | Some a -> fold f a  *)
 
-let next (Iter (s0, next')) =
-  failwith "todo"
-
+let view (Iter (s0, next)) =
+  match next s0 with
+  | Some (a, s1) -> Some (a, Iter (s1, next))
+  | None -> None
 
 let fold_while f z iterable         = failwith "todo"
 let fold_right f iterable z         = failwith "todo"
