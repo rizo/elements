@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "0.14.0"
+version: "0.14.1"
 maintainer: "Rizo Isrof <rizo@odis.io>"
 authors: [ "Rizo Isrof <rizo@odis.io>" ]
 license: "MIT"

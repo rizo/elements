@@ -18,24 +18,22 @@ module Iter    = Data_iter
 module Void    = Data_void
 module Range   = Data_range
 
-module Export : sig
-  type void = Void.t
-  (** The nonexistent data type. *)
+type void = Void.t
+(** The nonexistent data type. *)
 
-  type 'a vec = 'a Vec.t
-  (** A persistent vector type. *)
+type 'a vec = 'a Vec.t
+(** A persistent vector type. *)
 
-  val vec : 'a list -> 'a vec
-  (** [vec l] constructs a vector of the list [l].
+val vec : 'a list -> 'a vec
+(** [vec l] constructs a vector of the list [l].
 
-      {b Complexity:} {e O(n * O({!val:PersistentVector.add})) ~ O(n)}
+    {b Complexity:} {e O(n * O({!val:PersistentVector.add})) ~ O(n)}
 
-      {b Examples:}
+    {b Examples:}
 
-      {[
-        let v1 = vec ['a'; 'b'; 'c'] in
-        assert (Vec.len v1 = 3);
-        assert (Vec.get v1 0 = Some 'a');
-      ]} *)
-end
+    {[
+      let v1 = vec ['a'; 'b'; 'c'] in
+      assert (Vec.len v1 = 3);
+      assert (Vec.get v1 0 = Some 'a');
+    ]} *)
 
