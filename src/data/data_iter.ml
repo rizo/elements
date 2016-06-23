@@ -1,20 +1,10 @@
 
 (* Base Definitions *)
 
-type ('a, 'b) either = Left of 'a | Right of 'b
-
-let (//) opt def =
-  match opt with
-  | Some x -> x
-  | None -> def
-
-let (<<) f g x = f (g x)
-let (>>) g f x = f (g x)
+open Base
 
 
 (* Iterators *)
-
-type 'a iter = Iter : 's * ('s -> ('a * 's) option) -> 'a iter
 
 type 'a t = 'a iter
 
