@@ -73,6 +73,7 @@ module Chan = struct
         type item = char
         let iter = iter
       end)
+  end
 end
 
 let stdin  = Chan.of_in  Pervasives.stdin
