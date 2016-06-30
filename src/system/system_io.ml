@@ -45,27 +45,34 @@ module Chan = struct
   let write_char (Out {chan}) c =
     Pervasives.output_char chan c
 
-  module Lines = Iter.Input.Make0(struct
-      type nonrec t = input t
-      type item = string
+  module Lines = struct
 
-      let iter (In {chan}) =
-        let rec next chan =
-          try Some (input_line chan, chan)
-          with End_of_file -> None in
-        Iter (chan, next)
-    end)
+    let iter (In {chan}) =
+      let rec next chan =
+        try Some (input_line chan, chan)
+        with End_of_file -> None in
+      Iter (chan, next)
 
-  module Chars = Iter.Input.Make0(struct
-      type nonrec t = input t
-      type item = char
+    include Iter.Input.Make0(struct
+        type nonrec t = input t
+        type item = string
+        let iter = iter
+      end)
+  end
 
-      let iter (In {chan}) =
-        let rec next chan =
-          try Some (input_char chan, chan)
-          with End_of_file -> None in
-        Iter (chan, next)
-    end)
+  module Chars = struct
+
+    let iter (In {chan}) =
+      let rec next chan =
+        try Some (input_char chan, chan)
+        with End_of_file -> None in
+      Iter (chan, next)
+
+    include Iter.Input.Make0(struct
+        type nonrec t = input t
+        type item = char
+        let iter = iter
+      end)
 end
 
 let stdin  = Chan.of_in  Pervasives.stdin
