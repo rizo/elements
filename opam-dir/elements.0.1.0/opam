@@ -1,8 +1,9 @@
 opam-version: "1.2"
+version: "0.14.5"
 maintainer: "Rizo Isrof <rizo@odis.io>"
 authors: [ "Rizo Isrof <rizo@odis.io>" ]
 license: "MIT"
-homepage: "http://github.com/rizo/flow"
+homepage: "http://github.com/rizo/elements"
 dev-repo: "https://github.com/rizo/elements.git"
 bug-reports: "https://github.com/rizo/elements/issues"
 build: [
@@ -25,3 +26,5 @@ depends: [
   "oasis" {build & >= "0.4"}
   "ocamlfind" {build}
 ]
+available: [ ocaml-version = "4.03.0" ]
+
