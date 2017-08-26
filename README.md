@@ -66,7 +66,7 @@ measurements, that are triggered on each build and stored for review.
 | Values             | Short lowercase snake case          | `x`, `xs'`, `req`, `body`, `nitems`            |
 | Types              | Lowercase snake case                | `int`, `bytes`, `identifier`, `status_code`    |
 | Types parameters   | Preferably single-letter snake case | `'a list`, `('a, 'e) Result.t`, `'token lexer` |
-| Modules            | Capitalized snake case              | `Stream_writer`, `HTTP_request`, `File_path`   |
+| Modules, Functors  | Capitalized snake case              | `Stream_writer`, `HTTP_request`, `File_path`   |
 | Module types       | Capitalized snake case              | `Default,` `Equal`, `Monad`, `Parse`, `Show`   |
 | Constructors       | Capitalized snake case              | `Ok`, `Empty_response`, `If_expression`        |
 | Functions          | Lowercase snake case                | `say_hello`, `print`, `http_handler`, `show`   |
