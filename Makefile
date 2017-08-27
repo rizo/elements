@@ -1,48 +1,26 @@
-# OASIS_START
-# DO NOT EDIT (digest: a3c674b4239234cbbe53afe090018954)
 
-SETUP = ocaml setup.ml
+build:
+	jbuilder build -j4 @install
 
-build: setup.data
-	$(SETUP) -build $(BUILDFLAGS)
+install: build
+	jbuilder install
 
-doc: setup.data build
-	$(SETUP) -doc $(DOCFLAGS)
+uninstall:
+	jbuilder uninstall
 
-test: setup.data build
-	$(SETUP) -test $(TESTFLAGS)
+reinstall: uninstall install
 
-all:
-	$(SETUP) -all $(ALLFLAGS)
-
-install: setup.data
-	$(SETUP) -install $(INSTALLFLAGS)
-
-uninstall: setup.data
-	$(SETUP) -uninstall $(UNINSTALLFLAGS)
-
-reinstall: setup.data
-	$(SETUP) -reinstall $(REINSTALLFLAGS)
+test:
+	jbuilder runtest
 
 clean:
-	$(SETUP) -clean $(CLEANFLAGS)
+	jbuilder clean
 
-distclean:
-	$(SETUP) -distclean $(DISTCLEANFLAGS)
+utop: build utop.ml
+	/usr/bin/env bash -c 'utop -init <(cat ~/.ocamlinit utop.ml)'
 
-setup.data:
-	$(SETUP) -configure $(CONFIGUREFLAGS)
+watch:
+	ls src/*.ml* tests/*.ml* | entr -cr make test
 
-configure:
-	$(SETUP) -configure $(CONFIGUREFLAGS)
-
-.PHONY: build doc test all install uninstall reinstall clean distclean configure
-
-# OASIS_STOP
-
-dev-reinstall:
-	make clean
-	make build
-	make uninstall
-	make install
+.PHONY: build install uninstall reinstall test clean utop watch
 

@@ -1,0 +1,7 @@
+(jbuild_version 1)
+
+(library
+ ((name Base)
+  (public_name proto.base)
+  (modules (Base))))
+
