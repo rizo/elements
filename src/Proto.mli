@@ -1,14 +1,9 @@
 
 module Data    = Data
 module Control = Control
-(* module System  = System *)
-(* module IO      = System.IO *)
-(* module Chan    = System.IO.Chan *)
-
 
 (** Export Base definitions. *)
 include module type of Base
-
 
 (** Export Data modules and definitions. *)
 module Option = Data.Option
