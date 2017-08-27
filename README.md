@@ -1,6 +1,7 @@
-# Elements
+# Proto
 
-A collection of small modules, types and functions that will make your life easier.
+Proto is a small and modular base library for OCaml.
+
 
 Currently the following modules are provided:
 
@@ -8,27 +9,27 @@ Currently the following modules are provided:
 Elements
  ├── Base
  ├── Control
- │  ├── Exn
- │  └── Fn
+ │  ├── Semigroup
+ │  ├── Monoid
+ │  ├── Functor
+ │  ├── Exception
+ │  └── Function
  ├── Data
  │  ├── Array
  │  ├── Char
- │  ├── Counter
  │  ├── Either
  │  ├── Float
  │  ├── Int
- │  ├── Iter
  │  ├── List
  │  ├── Map
  │  ├── Option
- │  ├── Vec
- │  ├── Range
  │  ├── Result
  │  ├── Stream
  │  ├── String
  │  └── Void
- └── System
-    └── IO
+ ├── System
+ │  └── IO
+ └── Debug
 ```
 
 ## Goals
@@ -72,8 +73,6 @@ measurements, that are triggered on each build and stored for review.
 | Functions          | Lowercase snake case                | `say_hello`, `print`, `http_handler`, `show`   |
 | Type initializer   | Lowercase snake case                | `Request.init`, `Array.with_capacity`          |
 | Module initializer | Capitalized snake case              | `Map.Make`, `Functor.With_monad`               |
-
-
 
 
 ## Concepts
