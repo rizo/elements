@@ -2,7 +2,7 @@
 module Data    = Data
 module Control = Control
 
-include Base
+include Kernel
 
 module Option = Data.Option
 module Result = Data.Result

@@ -1,4 +1,4 @@
-B ../../_build/default/src/Base
 B ../../_build/default/src/Control
+B ../../_build/default/src/Kernel
 FLG -w -40
-S ../Base
+S ../Kernel

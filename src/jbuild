@@ -3,6 +3,6 @@
 (library
  ((name Proto)
   (public_name proto)
-  (libraries (proto.base proto.data proto.control))
+  (libraries (proto.kernel proto.data proto.control))
   (modules (Proto))))
 

@@ -1,10 +1,10 @@
 B ../_build/default/src
-B ../_build/default/src/Base
 B ../_build/default/src/Control
 B ../_build/default/src/Data
+B ../_build/default/src/Kernel
 B ../_build/default/src/Stdlib
 FLG -w -40
-S Base
 S Control
 S Data
+S Kernel
 S Stdlib

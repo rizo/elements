@@ -1,8 +1,8 @@
-B ../../_build/default/src/Base
 B ../../_build/default/src/Control
 B ../../_build/default/src/Data
+B ../../_build/default/src/Kernel
 B ../../_build/default/src/Stdlib
-FLG -open Data -w -40 -open Base -open Control
-S ../Base
+FLG -open Data -w -40 -open Kernel -open Control
 S ../Control
+S ../Kernel
 S ../Stdlib

@@ -3,8 +3,8 @@
 (library
  ((name Data)
   (public_name proto.data)
-  (libraries (proto.stdlib proto.base proto.control))
-  (flags (:standard -open Base -open Control))
+  (libraries (proto.stdlib proto.kernel proto.control))
+  (flags (:standard -open Kernel -open Control))
   (modules (Array
             Either
             List

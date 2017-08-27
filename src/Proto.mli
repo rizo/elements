@@ -3,7 +3,7 @@ module Data    = Data
 module Control = Control
 
 (** Export Base definitions. *)
-include module type of Base
+include module type of Kernel
 
 (** Export Data modules and definitions. *)
 module Option = Data.Option

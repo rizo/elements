@@ -648,26 +648,26 @@ end
 module Exn = struct
   type t = exn
 
-  let fail  = Base.fail
+  let fail  = Kernel.fail
 
   let show = Printexc.to_string
 
-  let raise = Base.raise
-  let raises = Base.raises
+  let raise = Kernel.raise
+  let raises = Kernel.raises
 end
 
 
 module Function = struct
   type ('a, 'b) t = 'a -> 'b
 
-  let identity = Base.identity
-  let flip     = Base.flip
-  let curry    = Base.curry
-  let uncurry  = Base.uncurry
-  let compose  = Base.compose
-  let always   = Base.always
-  let (<<)     = Base.(<<)
-  let (>>)     = Base.(>>)
+  let identity = Kernel.identity
+  let flip     = Kernel.flip
+  let curry    = Kernel.curry
+  let uncurry  = Kernel.uncurry
+  let compose  = Kernel.compose
+  let always   = Kernel.always
+  let (<<)     = Kernel.(<<)
+  let (>>)     = Kernel.(>>)
 
   let apply f x = f x
 
