@@ -27,8 +27,9 @@ Elements
  │  ├── Stream
  │  ├── String
  │  └── Void
- └── System
-    └── IO
+ ├── System
+ │  └── IO
+ └── Debug
 ```
 
 ## Goals
