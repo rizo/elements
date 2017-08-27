@@ -1,1 +1,14 @@
-opam-dir/elements.0.1.0/opam
+opam-version: "1.2"
+doc:          "http://odis.io/proto"
+maintainer:   "Rizo Isrof <rizo@odis.io>"
+authors:      "Rizo Isrof <rizo@odis.io>"
+homepage:     "https://github.com/rizo/proto"
+bug-reports:  "https://github.com/rizo/proto/issues"
+dev-repo:     "https://github.com/rizo/proto.git"
+license:      "ISC"
+
+available: [ocaml-version >= "4.01.0"]
+build: ["make" "build"]
+depends: [
+  "jbuilder" {build}
+]
