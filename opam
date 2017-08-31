@@ -18,5 +18,5 @@ depopts: []
 build:
 [[
   "ocaml" "pkg/pkg.ml" "build"
-          "--pinned" "%{pinned}%"
+          "--dev-pkg" "%{pinned}%"
 ]]
