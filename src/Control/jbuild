@@ -1,0 +1,8 @@
+(jbuild_version 1)
+
+(library
+ ((name Control)
+  (public_name proto.control)
+  (libraries (proto.kernel))
+  (modules (Control))))
+

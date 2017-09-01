@@ -1,0 +1,7 @@
+(jbuild_version 1)
+
+(library
+ ((name System)
+  (public_name proto.system)
+  (modules (System))))
+

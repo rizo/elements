@@ -3,10 +3,10 @@ maintainer: "Rizo Isrof <rizo@odis.io>"
 authors: ["Rizo Isrof <rizo@odis.io>"]
 homepage: "https://github.com/rizo/proto"
 doc: "http://rizo.odis.io/proto/doc"
-license: "ISC"
 dev-repo: "https://github.com/rizo/proto.git"
 bug-reports: "https://github.com/rizo/proto/issues"
-tags: []
+tags: ["standard" "functional" "org:rizo" ]
+license: "ISC"
 available: [ ocaml-version >= "4.01.0"]
 depends:
 [
@@ -16,4 +16,4 @@ depends:
   "shadow-stdlib"
 ]
 depopts: []
-build: [["make" "build"]]
+build: ["make" "build"]
