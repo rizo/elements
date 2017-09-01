@@ -1,0 +1,27 @@
+(jbuild_version 1)
+
+(library
+ ((name Kernel)
+  (public_name proto.kernel)
+  (wrapped true)
+  (libraries (shadow-stdlib))
+  (modules (Kernel))))
+
+(library
+ ((name Proto)
+  (public_name proto)
+  (wrapped true)
+  (libraries (proto.kernel shadow-stdlib))
+  (modules (Array
+            Control
+            Dict
+            Either
+            List
+            Option
+            Proto
+            Result
+            Set
+            Stream
+            String
+            Tuple
+            Void))))
