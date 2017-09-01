@@ -19,10 +19,8 @@ test:
 clean:
 	jbuilder clean
 
-utop: build utop.ml
-	/usr/bin/env bash -c 'utop -init <(cat ~/.ocamlinit utop.ml)'
-
-watch:
+live-test:
+	which entr
 	ls src/*.ml* tests/*.ml* | entr -cr make test
 
-.PHONY: build install uninstall reinstall test clean utop watch
+.PHONY: build install uninstall reinstall test clean live-test

@@ -1,7 +1,0 @@
-(jbuild_version 1)
-
-(library
- ((name Stdlib)
-  (public_name proto.stdlib)
-  (modules (Stdlib))))
-

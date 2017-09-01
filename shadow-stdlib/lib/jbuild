@@ -1,0 +1,11 @@
+(jbuild_version 1)
+
+(library
+ ((name        shadow_stdlib)
+  (public_name shadow-stdlib)
+  (preprocess no_preprocessing)))
+
+(rule
+ ((targets (shadow_stdlib.ml))
+  (deps    (../gen/gen.exe))
+  (action  (run ${<} -stdlib ${ocaml_where}/stdlib.cma -o ${@}))))
