@@ -1,4 +1,4 @@
-B ../_build/default/gen
+B ../../_build/default/shadow-stdlib/gen
 FLG -w -40
 PKG compiler-libs
 PKG compiler-libs.bytecomp

@@ -1,4 +1,5 @@
+B ../_build/default/shadow-stdlib/lib
 B ../_build/default/src
 FLG -w -40 -open Proto__ -w -40
-PKG shadow-stdlib
 S .
+S ../shadow-stdlib/lib

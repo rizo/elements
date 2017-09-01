@@ -4,14 +4,14 @@
  ((name Kernel)
   (public_name proto.kernel)
   (wrapped true)
-  (libraries (shadow-stdlib))
+  (libraries (proto.shadow-stdlib))
   (modules (Kernel))))
 
 (library
  ((name Proto)
   (public_name proto)
   (wrapped true)
-  (libraries (proto.kernel shadow-stdlib))
+  (libraries (proto.kernel proto.shadow-stdlib))
   (modules (Array
             Control
             Dict
