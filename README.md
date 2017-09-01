@@ -34,25 +34,6 @@ Proto
  └── Debug
 ```
 
-## Installation
-
-Proto can be installed with `opam`:
-
-    opam install proto
-
-If you don't use `opam` consult the [`opam`](opam) file for build
-instructions.
-
-
-## Documentation
-
-The documentation and API reference is generated from the source
-interfaces. It can be consulted [online][doc] or via `odig doc
-proto`.
-
-[doc]: http://rizo.odis.io/proto/doc
-
-
 ## Goals
 
 ### Extensibility
@@ -81,35 +62,29 @@ and performance. All the decisions are based on automatic CPU and memory
 measurements, that are triggered on each build and stored for review.
 
 
-## Naming Conventions
+## Installation
 
-| Item               | Convention                 | Examples                                       |
-|--------------------|----------------------------|------------------------------------------------|
-| Values             | Short lowercase snake case | `x`, `xs'`, `req`, `body`, `nitems`            |
-| Types              | Lowercase snake case       | `int`, `bytes`, `identifier`, `status_code`    |
-| Types parameters   | Short lowercase snake case | `'a list`, `('a, 'e) Result.t`, `'token lexer` |
-| Modules, Functors  | Capitalized snake case     | `Stream_writer`, `HTTP_request`, `File_path`   |
-| Module types       | Capitalized snake case     | `Default,` `Equal`, `Monad`, `Parse`, `Show`   |
-| Constructors       | Capitalized snake case     | `Ok`, `Empty_response`, `If_expression`        |
-| Functions          | Lowercase snake case       | `say_hello`, `print`, `http_handler`, `show`   |
-| Type initializer   | Lowercase snake case       | `Request.init`, `Array.with_capacity`          |
-| Module initializer | Capitalized snake case     | `Map.Make`, `Functor.With_monad`               |
+Proto can be installed with `opam`:
+
+    opam install proto
+
+If you don't use `opam` consult the [`opam`](opam) file for build
+instructions.
 
 
-## Concepts
+## Documentation
 
-A concept is an interfaces (_.i.e._ a _module type_ in OCaml's jargon) that
-encodes a certain functionality a particular type has. Concepts can be used
-to abstract over behavior that types can have in common. For example the
-`Default` concept requires a type to provide a default value, like `0` for
-integers and `[]` for lists.
+The documentation and API reference is generated from the source
+interfaces. It can be consulted [online][doc] or via `odig doc
+proto`.
 
-Alternative names: concepts, protocols, traits, classes.
+[doc]: http://rizo.odis.io/proto/doc
 
 
 ## License
 
-This library is distributed under the ISC license.
+This library is distributed under the ISC license, see full terms in the
+`LICENSE.md` file.
 
 
 ## Contributors
