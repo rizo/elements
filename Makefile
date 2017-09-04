@@ -3,7 +3,8 @@ build:
 	jbuilder build -j4 @install
 	@# Only install the top-level `Proto` module.
 	@# See: https://github.com/janestreet/jbuilder/pull/106
-	@sed -i '' '/Proto_/d' _build/default/proto.install
+	@sed '/Proto_/d' _build/default/proto.install > /tmp/proto_install \
+	    && mv /tmp/proto_install _build/default/proto.install
 
 install: build
 	jbuilder install
