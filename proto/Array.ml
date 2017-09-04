@@ -1,4 +1,6 @@
 
+module Stdlib = Proto_shadow_stdlib
+
 type 'a t = 'a array
 
 external idx : 'a array -> int -> 'a = "%array_unsafe_get"
@@ -14,12 +16,12 @@ external concat : 'a array list -> 'a array = "caml_array_concat"
 external unsafe_blit : 'a array -> int -> 'a array -> int -> int -> unit = "caml_array_blit"
 external make_float: int -> float array = "caml_make_float_vect"
 
-let init   = Shadow_stdlib.Array.init
-let blit   = Shadow_stdlib.Array.blit
-let copy   = Shadow_stdlib.Array.copy
-let append = Shadow_stdlib.Array.append
-let fill   = Shadow_stdlib.Array.fill
-let sort   = Shadow_stdlib.Array.sort
+let init   = Stdlib.Array.init
+let blit   = Stdlib.Array.blit
+let copy   = Stdlib.Array.copy
+let append = Stdlib.Array.append
+let fill   = Stdlib.Array.fill
+let sort   = Stdlib.Array.sort
 
 let copy_and_add a x =
   let a_len = len a in

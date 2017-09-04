@@ -1,3 +1,4 @@
+module Stdlib = Proto_shadow_stdlib
 open Kernel
 
 type 'a t = Empty | Yield of 'a * (unit -> 'a t)
@@ -75,14 +76,14 @@ let to_list s =
   let rec loop acc s =
     match s with
     | Yield (a, s') -> loop (a::acc) (s' ())
-    | Empty          -> Shadow_stdlib.List.rev acc
+    | Empty          -> Stdlib.List.rev acc
   in loop [] s
 
 let of_array a =
   let rec loop i =
     if i = 0 then empty
-    else (yield (Shadow_stdlib.Array.get a i) ++ fun () -> loop (i - 1)) in
-  loop (Shadow_stdlib.Array.length a - 1)
+    else (yield (Stdlib.Array.get a i) ++ fun () -> loop (i - 1)) in
+  loop (Stdlib.Array.length a - 1)
 
 let to_array s =
   let curr = ref s in

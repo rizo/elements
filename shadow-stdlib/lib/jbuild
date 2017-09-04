@@ -1,11 +1,11 @@
 (jbuild_version 1)
 
 (library
- ((name        Shadow_stdlib)
+ ((name        Proto_shadow_stdlib)
   (public_name proto.shadow-stdlib)
   (preprocess no_preprocessing)))
 
 (rule
- ((targets (Shadow_stdlib.ml))
+ ((targets (Proto_shadow_stdlib.ml))
   (deps    (../gen/gen.exe))
   (action  (run ${<} -stdlib ${ocaml_where}/stdlib.cma -o ${@}))))

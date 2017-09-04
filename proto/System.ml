@@ -1,4 +1,6 @@
 
+module Stdlib = Proto_shadow_stdlib
+
 module IO = struct
   module File = struct
     type input  = { chan : in_channel  }
@@ -37,7 +39,7 @@ module IO = struct
         end in
       loop ();
       let str = Buffer.contents buffer in
-      if Shadow_stdlib.String.length str = 0 then None else Some str
+      if Stdlib.String.length str = 0 then None else Some str
 
     let write_char (Out {chan}) c =
       Pervasives.output_char chan c

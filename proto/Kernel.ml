@@ -1,5 +1,6 @@
 
-module P = Shadow_stdlib.Pervasives
+module Stdlib = Proto_shadow_stdlib
+module P = Proto_shadow_stdlib.Pervasives
 
 
 (* Exceptions *)
@@ -22,7 +23,7 @@ let raises ?exn f =
     end
 
 let show self =
-  Shadow_stdlib.Printexc.to_string self
+  Stdlib.Printexc.to_string self
 
 let fail = P.failwith
 
@@ -713,8 +714,8 @@ module Char = struct
 
   (* Parsable *)
   let parse s =
-    if Shadow_stdlib.String.length s = 1 then
-      Some (Shadow_stdlib.String.get s 0)
+    if Stdlib.String.length s = 1 then
+      Some (Stdlib.String.get s 0)
     else
       None
 

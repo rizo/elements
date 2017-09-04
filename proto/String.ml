@@ -1,21 +1,22 @@
+module Stdlib = Proto_shadow_stdlib
 open Kernel
 
 (* include Caml.String *)
 
-type t = Shadow_stdlib.String.t
+type t = Stdlib.String.t
 
 let split ?(on=' ') str =
   let rec indices acc i =
     try
-      let i = succ (Shadow_stdlib.String.index_from str i on) in
+      let i = succ (Stdlib.String.index_from str i on) in
       indices (i::acc) i
     with Not_found ->
-      (Shadow_stdlib.String.length str + 1) :: acc
+      (Stdlib.String.length str + 1) :: acc
   in
   let is = indices [0] 0 in
   let rec aux acc = function
     | last::start::tl ->
-      let w = Shadow_stdlib.String.sub str start (last - start - 1) in
+      let w = Stdlib.String.sub str start (last - start - 1) in
       aux (w::acc) (start::tl)
     | _ -> acc
   in

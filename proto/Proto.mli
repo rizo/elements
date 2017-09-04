@@ -888,14 +888,10 @@ module Control : module type of Control
 (** {1:data Datatypes} *)
 
 module Data : sig
-  module Array  : module type of Array
   module Either : module type of Either
-  module List   : module type of List
-  module Dict   : module type of Dict
   module Option : module type of Option
   module Result : module type of Result
   module Stream : module type of Stream
-  module String : module type of String
   module Tuple  : module type of Tuple
   module Void   : module type of Void
 end

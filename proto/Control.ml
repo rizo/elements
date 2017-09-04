@@ -1,3 +1,4 @@
+module Stdlib = Proto_shadow_stdlib
 
 module type Type = sig
   type t
@@ -74,7 +75,7 @@ module Monad = struct
       maa >>= fun ma -> ma
 
     let sequence mas =
-      Shadow_stdlib.List.fold_right
+      Stdlib.List.fold_right
         (fun ma ms ->
            ma >>= fun a ->
            ms >>= fun s ->
@@ -131,7 +132,7 @@ module Monad2 = struct
       maa >>= fun ma -> ma
 
     let sequence mas =
-      Shadow_stdlib.List.fold_right
+      Stdlib.List.fold_right
         (fun ma ms ->
            ma >>= fun a ->
            ms >>= fun s ->
@@ -404,12 +405,12 @@ module Alternative = struct
 
     let some v =
       let rec many_v () = some_v () <|> pure []
-      and some_v () = F.map Shadow_stdlib.List.cons v <*> many_v () in
+      and some_v () = F.map Stdlib.List.cons v <*> many_v () in
       some_v ()
 
     let many v =
       let rec many_v () = some_v () <|> pure []
-      and some_v () = F.map Shadow_stdlib.List.cons v <*> many_v () in
+      and some_v () = F.map Stdlib.List.cons v <*> many_v () in
       many_v ()
   end
 end
@@ -450,12 +451,12 @@ module Alternative2 = struct
 
     let some v =
       let rec many_v () = some_v () <|> pure []
-      and some_v () = F.map Shadow_stdlib.List.cons v <*> many_v () in
+      and some_v () = F.map Stdlib.List.cons v <*> many_v () in
       some_v ()
 
     let many v =
       let rec many_v () = some_v () <|> pure []
-      and some_v () = F.map Shadow_stdlib.List.cons v <*> many_v () in
+      and some_v () = F.map Stdlib.List.cons v <*> many_v () in
       many_v ()
   end
 end
