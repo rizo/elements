@@ -438,7 +438,7 @@ module IxMonad : sig
 end
 
 
-module Exn : sig
+module Exception : sig
   type t = exn
 
   val raise : ?trace: bool -> exn -> 'a

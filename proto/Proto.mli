@@ -885,6 +885,10 @@ val ( >> )  : ('a -> 'b) -> ('b -> 'c) -> 'a -> 'c
 
 module Control : module type of Control
 
+(** Export Control modules and definitions. *)
+module Exception = Control.Exception
+module Function = Control.Function
+
 (** {1:data Datatypes} *)
 
 module Data : sig

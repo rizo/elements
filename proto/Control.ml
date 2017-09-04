@@ -647,7 +647,7 @@ module IxMonad = struct
 end
 
 
-module Exn = struct
+module Exception = struct
   type t = exn
 
   let fail  = Kernel.fail

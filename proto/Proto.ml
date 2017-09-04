@@ -2,6 +2,9 @@ include Kernel
 
 module Control = Control
 
+module Exception = Control.Exception
+module Function = Control.Function
+
 module Data = struct
   module Array  = Array
   module Either = Either
