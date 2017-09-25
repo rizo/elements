@@ -20,16 +20,85 @@ module type Type3 = sig
 end
 
 
-module type Semigroup = sig
+module type Semigroup0 = sig
   type t
+
   val append : t -> t -> t
+  val (++) : t -> t -> t
 end
 
 
-module type Monoid = sig
+module Semigroup0 = struct
+  module type Base = sig
+    type t
+
+    val append : t -> t -> t
+  end
+
+  module Make(B : Base) = struct
+    include B
+    let (++) = append
+  end
+end
+
+module type Monoid0 = sig
   type t
   val empty : t
-  include Semigroup with type t := t
+  include Semigroup0 with type t := t
+end
+
+module Monoid0 = struct
+  module type Base = sig
+    type t
+    val empty : t
+    val append : t -> t -> t
+  end
+
+  module Make(B : Base) = struct
+    let empty = B.empty
+    include Semigroup0.Make(B)
+  end
+end
+
+
+module type Semigroup = sig
+  type 'a t
+
+  val append : 'a t -> 'a t -> 'a t
+  val (++) : 'a t -> 'a t -> 'a t
+end
+
+
+module Semigroup = struct
+  module type Base = sig
+    type 'a t
+
+    val append : 'a t -> 'a t -> 'a t
+  end
+
+  module Make(B : Base) = struct
+    include B
+    let (++) = append
+  end
+end
+
+module type Monoid = sig
+  type 'a t
+  val empty : 'a t
+  include Semigroup with type 'a t := 'a t
+end
+
+module Monoid = struct
+  module type Base = sig
+    type 'a t
+    val empty : 'a t
+    val append : 'a t -> 'a t -> 'a t
+  end
+
+  module Make(B : Base) = struct
+    let empty = B.empty
+    include Semigroup.Make(B)
+  end
 end
 
 
@@ -221,7 +290,7 @@ module type Applicative = sig
 
   val pure : 'a -> 'a t
 
-  val ap : ('a -> 'b) t -> 'a t -> 'b t
+  val apply : ('a -> 'b) t -> 'a t -> 'b t
 
   val ( <*> ) : ('a -> 'b) t -> 'a t -> 'b t
 
@@ -239,7 +308,7 @@ module Applicative = struct
 
     val pure : 'a -> 'a t
 
-    val ap : ('a -> 'b) t -> 'a t -> 'b t
+    val apply : ('a -> 'b) t -> 'a t -> 'b t
   end
 
 
@@ -247,7 +316,7 @@ module Applicative = struct
     type 'a t = 'a A.t
 
     let map f ma =
-      A.ap (A.pure f) ma
+      A.apply (A.pure f) ma
   end
 
 
@@ -257,7 +326,7 @@ module Applicative = struct
     module Functor = Into_functor (B)
 
     let ( <*> ) fab fa =
-      B.ap fab fa
+      B.apply fab fa
 
     let lift2 f fa fb =
       Functor.map f fa <*> fb
@@ -281,7 +350,7 @@ module Applicative = struct
 
       module Monad = Monad.Make(M)
 
-      let ap fab fa =
+      let apply fab fa =
         let open Monad in
         fab >>= fun f ->
         fa >>= fun a ->
@@ -298,7 +367,7 @@ module type Applicative2 = sig
 
   val pure : 'a -> ('a, 'x) t
 
-  val ap : ('a -> 'b, 'x) t -> ('a, 'x) t -> ('b, 'x) t
+  val apply : ('a -> 'b, 'x) t -> ('a, 'x) t -> ('b, 'x) t
 
   val ( <*> ) : ('a -> 'b, 'x) t -> ('a, 'x) t -> ('b, 'x) t
 
@@ -316,7 +385,7 @@ module Applicative2 = struct
 
     val pure : 'a -> ('a, 'x) t
 
-    val ap : (('a -> 'b), 'x) t -> ('a, 'x) t -> ('b, 'x) t
+    val apply : (('a -> 'b), 'x) t -> ('a, 'x) t -> ('b, 'x) t
   end
 
 
@@ -324,7 +393,7 @@ module Applicative2 = struct
     type ('a, 'x) t = ('a, 'x) A.t
 
     let map f ma =
-      A.ap (A.pure f) ma
+      A.apply (A.pure f) ma
   end
 
 
@@ -334,7 +403,7 @@ module Applicative2 = struct
     module Functor = Into_functor(B)
 
     let ( <*> ) fab fa =
-      B.ap fab fa
+      B.apply fab fa
 
     let lift2 f fa fb =
       Functor.map f fa <*> fb
@@ -358,7 +427,7 @@ module Applicative2 = struct
 
       module Monad = Monad2.Make(M)
 
-      let ap fab fa =
+      let apply fab fa =
         let open Monad in
         fab >>= fun f ->
         fa >>= fun a ->
@@ -368,7 +437,6 @@ module Applicative2 = struct
     include Make(Base)
   end
 end
-
 
 module type Alternative = sig
   type 'a t
@@ -692,3 +760,16 @@ module Identity = struct
 
   include Functor.With_monad(Monad_base)
 end
+
+
+let scoped (type a) f =
+  let module Scope = struct
+    exception Break of a
+  end in
+  let break a =
+    Kernel.raise ~trace:false (Scope.Break a) in
+  try
+    f break
+  with Scope.Break a -> a
+
+

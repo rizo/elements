@@ -25,15 +25,95 @@ module type Type3 = sig
 end
 
 
-module type Semigroup = sig
+(** The [Semigroup] class defines an associative operation on a type.
+
+    Instances are required to satisfy the following law:
+
+    - {e Associativity}: [(a <+> b) <+> c = a <+> (b <+> c)]
+
+    One example of a [Semigroup] is [String], with [(<+>)] defined as string
+    concatenation.
+
+    The standard instances that implement [Semigroup] are:
+
+    - String
+    - Unit
+    - Void
+    - Function
+    - Array
+
+*)
+module type Semigroup0 = sig
   type t
+
   val append : t -> t -> t
+  val (++) : t -> t -> t
 end
 
-module type Monoid = sig
+module Semigroup0 : sig
+  module type Base = sig
+    type t
+
+    val append : t -> t -> t
+  end
+
+  module Make(B : Base) : Semigroup0 with type t := B.t
+end
+
+
+(* A type is a [Monoid] if it provides a default value and can combine
+   two values into one. *)
+module type Monoid0 = sig
   type t
   val empty : t
-  include Semigroup with type t := t
+  include Semigroup0 with type t := t
+end
+
+module Monoid0 : sig
+  module type Base = sig
+    type t
+    val empty : t
+    val append : t -> t -> t
+  end
+
+  module Make(B : Base) : Monoid0 with type t := B.t
+end
+
+
+module type Semigroup = sig
+  type 'a t
+
+  val append : 'a t -> 'a t -> 'a t
+  val (++) : 'a t -> 'a t -> 'a t
+end
+
+module Semigroup : sig
+  module type Base = sig
+    type 'a t
+
+    val append : 'a t -> 'a t -> 'a t
+  end
+
+  module Make(B : Base) : Semigroup with type 'a t := 'a B.t
+end
+
+
+(* A type is a [Monoid] if it provides a default value and can combine
+   two values into one. *)
+module type Monoid = sig
+  type 'a t
+  val empty : 'a t
+  include Semigroup with type 'a t := 'a t
+end
+
+module Monoid : sig
+  module type Base = sig
+    type 'a t
+    val empty : 'a t
+    val append : 'a t -> 'a t -> 'a t
+  end
+
+  module Make(B : Base) : Monoid with type 'a t := 'a B.t
 end
 
 
@@ -150,8 +230,14 @@ end
 
 
 (** Signature for the polymorphic unary functor types.
-    A [Functor] is a type that supports a mapping operation [map] that can
-    transform values contained in the type. *)
+
+    A type is a [Functor] if it provides some context or structure for values
+    of type ['a] and allows the values to be mapped over and transformed into
+    type ['b].
+
+    The mapping function may only see each itm independently - not the whole
+    structure; it may also not change the structure, only the values being
+    mapped. *)
 module type Functor = sig
   type 'a t
   (** The type that can be mapped over. *)
@@ -201,14 +287,28 @@ module Functor2 : sig
 end
 
 
-(** A functor with application, providing operations to embed pure expressions,
-    sequence computations and combine their results. *)
+(** Interface for the polymorphic unary applicative functor types.
+
+    A type is an [Applicative] if it is a [Functor], and also permits arbitrary
+    values and a mapping function to be exist in its context. More simply, this
+    allows for chaining of computations inside some context.
+
+    For example, if the functor in question is the List type and we have a list
+    of functions which take an integer and produce a boolean, and another list
+    of integers, then we can write:
+
+    {[
+      func_list <*> int_list
+    ]}
+
+    to apply all the functions in the first list to all the ints in the second list
+    to produce a list of all results. *)
 module type Applicative = sig
   type 'a t
 
   val pure : 'a -> 'a t
 
-  val ap : ('a -> 'b) t -> 'a t -> 'b t
+  val apply : ('a -> 'b) t -> 'a t -> 'b t
 
   val ( <*> ) : ('a -> 'b) t -> 'a t -> 'b t
 
@@ -226,7 +326,7 @@ module Applicative : sig
 
     val pure : 'a -> 'a t
 
-    val ap : ('a -> 'b) t -> 'a t -> 'b t
+    val apply : ('a -> 'b) t -> 'a t -> 'b t
   end
 
   module With_monad (M : Monad.Base) : (Applicative with type 'a t := 'a M.t)
@@ -242,7 +342,7 @@ module type Applicative2 = sig
 
   val pure : 'a -> ('a, 'x) t
 
-  val ap : ('a -> 'b, 'x) t -> ('a, 'x) t -> ('b, 'x) t
+  val apply : ('a -> 'b, 'x) t -> ('a, 'x) t -> ('b, 'x) t
 
   val ( <*> ) : ('a -> 'b, 'x) t -> ('a, 'x) t -> ('b, 'x) t
 
@@ -260,7 +360,7 @@ module Applicative2 : sig
 
     val pure : 'a -> ('a, 'x) t
 
-    val ap : ('a -> 'b, 'x) t -> ('a, 'x) t -> ('b, 'x) t
+    val apply : ('a -> 'b, 'x) t -> ('a, 'x) t -> ('b, 'x) t
   end
 
   module With_monad (M : Monad2.Base) : (Applicative2 with type ('a, 'x) t := ('a, 'x) M.t)
@@ -271,6 +371,10 @@ module Applicative2 : sig
 end
 
 
+(** A type is an [Alternative] if it is also an [Applicative]. The name
+   "Alternative" suggests a common use case for this interface: functor
+    computations which allow for a limited form of choice. How an [Alternative]
+    instance decides between two values is what defines it. *)
 module type Alternative = sig
   type 'a t
 
@@ -441,7 +545,7 @@ end
 module Exception : sig
   type t = exn
 
-  val raise : ?trace: bool -> exn -> 'a
+  val raise : ?trace: bool -> t -> 'a
   (** [raise ?trace exn] raises the exception [exn]. If [trace] is [false] no
       backtrace will be recorded, resulting in faster execution.
 
@@ -456,14 +560,14 @@ module Exception : sig
                 with Not_found -> true)
       ]} *)
 
-  val raises : ?exn: exn -> (unit -> 'a) -> bool
-  (** [raises ?exn f] is [true] if the exception [exn] is raised while calling
+  val raises : ?only: t -> (unit -> 'a) -> bool
+  (** [raises ?only f] is [true] if the exception [exn] is raised while calling
       [f], [false] otherwise. If no [exn] is given, will return [true] on any
       exception.
 
       {[
         assert (raises (fun () -> fail "yes"));
-        assert (raises (fun () -> Option.force None) ~exn:No_value);
+        assert (raises (fun () -> Option.force None) ~only:No_value);
         assert (not (raises (fun () -> "no")))
       ]} *)
 
@@ -498,4 +602,18 @@ module Identity : sig
   include Functor with type 'a t := 'a t
 end
 
+
+val scoped : (('a -> 'b) -> 'a) -> 'a
+(** [scoped f] is the result of invocation of the function [f] with the
+    ability to interrupt its execution and return some value. A special
+    function [break] will be passed to [f] as an argument that can capture a
+    value by (internally) raising an exception.
+
+    {[
+      let result =
+        scoped (fun break ->
+          break "hello";
+          print "this will not be printed") in
+      assert (result = "hello")
+    ]} *)
 
