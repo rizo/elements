@@ -1,5 +1,7 @@
 module Stdlib = Proto_shadow_stdlib
 
+let cons x xs = x :: xs
+
 module type Type = sig
   type t
 end
@@ -473,12 +475,12 @@ module Alternative = struct
 
     let some v =
       let rec many_v () = some_v () <|> pure []
-      and some_v () = F.map Stdlib.List.cons v <*> many_v () in
+      and some_v () = F.map cons v <*> many_v () in
       some_v ()
 
     let many v =
       let rec many_v () = some_v () <|> pure []
-      and some_v () = F.map Stdlib.List.cons v <*> many_v () in
+      and some_v () = F.map cons v <*> many_v () in
       many_v ()
   end
 end
@@ -519,12 +521,12 @@ module Alternative2 = struct
 
     let some v =
       let rec many_v () = some_v () <|> pure []
-      and some_v () = F.map Stdlib.List.cons v <*> many_v () in
+      and some_v () = F.map cons v <*> many_v () in
       some_v ()
 
     let many v =
       let rec many_v () = some_v () <|> pure []
-      and some_v () = F.map Stdlib.List.cons v <*> many_v () in
+      and some_v () = F.map cons v <*> many_v () in
       many_v ()
   end
 end
