@@ -12,7 +12,7 @@ let raise ?(trace = true) self =
     P.raise_notrace self
 
 
-let raises ?exn f =
+let raises ?only:exn f =
   try
     P.ignore (f ());
     false
