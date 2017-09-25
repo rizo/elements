@@ -25,8 +25,8 @@ type void = Data.Void.t
 
 (* Tuples *)
 type ('a, 'b) pair = ('a, 'b) Data.Tuple.pair
-let _1 = Data.Tuple._1
-let _2 = Data.Tuple._2
+let first = Data.Tuple.first
+let second = Data.Tuple.second
 
 (* Option *)
 let some = Data.Option.some

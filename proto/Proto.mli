@@ -908,11 +908,11 @@ module Result = Data.Result
 type ('a, 'b) pair = ('a, 'b) Data.Tuple.pair
 (** Global alias for {!Data.Tuple.pair}. *)
 
-val _1  : ('a, 'b) pair -> 'a
-(** Global alias for {!Data.Tuple._1}. *)
+val first : ('a, 'b) pair -> 'a
+(** Global alias for {!Data.Tuple.first}. *)
 
-val _2 : ('a, 'b) pair -> 'b
-(** Global alias for {!Data.Tuple._2}. *)
+val second : ('a, 'b) pair -> 'b
+(** Global alias for {!Data.Tuple.second}. *)
 
 type void = Data.Void.t
 (** Global alias for {!Void.t}. *)
