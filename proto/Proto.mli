@@ -856,6 +856,16 @@ val ( |> ) : 'a -> ('a -> 'b) -> 'b
       x |> f |> g |> h = h (g (f x))
     ]} *)
 
+val ( @ ) : ('a -> 'b) -> 'a -> 'b
+(** [f @ x] reads as "apply" and is equivalent to [f x]. Can be used to
+    create long chains of transformation and since [@] has low,
+    right-associative precedence, it sometimes allows parentheses to be
+    omitted.
+
+    {[
+      f @ g @ h @ x = f (g (h x))
+    ]} *)
+
 val identity : 'a -> 'a
 (** [identity a] always returns [a]. This is called the identity function. *)
 

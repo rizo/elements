@@ -583,6 +583,12 @@ module Function : sig
 
   val flip : ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 
+  val apply : ('a -> 'b) -> 'a -> 'b
+
+  val (@) : ('a -> 'b) -> 'a -> 'b
+
+  val (|>) : 'a -> ('a -> 'b) -> 'b
+
   val always : 'a -> 'b -> 'a
 
   val curry : (('a * 'b) -> 'c) -> 'a -> 'b -> 'c
@@ -592,6 +598,8 @@ module Function : sig
   val compose : ('b -> 'c) -> ('a -> 'b) -> 'a -> 'c
   val ( << )  : ('b -> 'c) -> ('a -> 'b) -> 'a -> 'c
   val ( >> )  : ('a -> 'b) -> ('b -> 'c) -> 'a -> 'c
+
+  val map : ('a -> 'b) -> ('c -> 'a) -> 'c -> 'b
 end
 
 (** Trivial identity type module. *)
