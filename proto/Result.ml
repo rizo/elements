@@ -39,6 +39,11 @@ let ( or ) self default =
   | Ok x    -> x
   | Error _ -> default
 
+let or_fail message self =
+  match self with
+  | Ok x    -> x
+  | Error _ -> fail message
+
 let result f default self =
   match self with
   | Ok x    -> f x

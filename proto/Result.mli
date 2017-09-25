@@ -61,6 +61,16 @@ val ( or ) : ('a, 'e) result -> 'a -> 'a
     Note: [or] has a very low precedence, expressions have to be grouped to
     delimit the scope. *)
 
+val or_fail : string -> ('a, 'e) result -> 'a
+(** [or_fail message self] forces the extraction of the [Ok] value and
+    {!fail}s if [self] is [Error].
+
+    @raise Failure if [self] is [Error].
+
+    {[
+      assert (Ok 42 |> Option.or_fail "no value" = 1);
+    ]} *)
+
 val ( |> ) : ('a, 'e) result -> ('a -> 'b) -> ('b, 'e) result
 (** [res |> f] will apply [f] to the [Ok] value wrapped by [res], returning
     [Ok] with the resulting value, or [Error] if [res] does not not have any
