@@ -947,6 +947,9 @@ val option : ('a -> 'b) -> (unit -> 'b) -> 'a option -> 'b
 val ( or ) : 'a option -> 'a -> 'a
 (** Global alias for {!Option.( or )}. *)
 
+val or_else : (unit -> 'a) -> 'a option -> 'a
+(** Global alias for {!Option.or_else}. *)
+
 
 (* (** {6 Global result operations} *) *)
 

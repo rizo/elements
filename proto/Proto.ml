@@ -35,6 +35,7 @@ let is_some = Data.Option.is_some
 let is_none = Data.Option.is_none
 let option = Data.Option.option
 let ( or ) = Data.Option.( or )
+let or_else = Data.Option.or_else
 
 (* Result *)
 let ok = Data.Result.ok
