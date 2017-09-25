@@ -34,6 +34,11 @@ let force self =
   | Some x -> x
   | None   -> raise No_value
 
+let or_fail message self =
+  match self with
+  | Some x -> x
+  | None -> fail message
+
 let catch f =
   try
     Some (f ())

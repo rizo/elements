@@ -67,6 +67,16 @@ val or_else : (unit -> 'a) -> 'a option -> 'a
       assert (Some "Bob" |> Option.with_default read_line = "Bob");
     ]} *)
 
+val or_fail : string -> 'a option -> 'a
+(** [or_fail message opt] forces the extraction of the optional value and
+    {!fail}s if [self] does not contain a value.
+
+    @raise Failure if [self] is [None].
+
+    {[
+      assert (List.head [1; 2; 3] |> Option.or_fail "empty list" = 1);
+    ]} *)
+
 val ( |> ) : 'a option -> ('a -> 'b) -> 'b option
 (** [opt |> f] will apply [f] to the value wrapped by [opt], returning an
     option with the resulting value, or [None] if [opt] does not not have any
