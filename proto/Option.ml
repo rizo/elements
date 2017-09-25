@@ -12,6 +12,8 @@ let none   = None
 let is_some = function Some _ -> true  | None -> false
 let is_none = function Some _ -> false | None -> true
 
+let is_empty = is_none
+
 let option f default self =
   match self with
   | Some x -> f x
@@ -36,6 +38,12 @@ let catch f =
   try
     Some (f ())
   with _ -> None
+
+
+let each f self =
+  match self with
+  | Some x -> f x
+  | None -> ()
 
 (* Comparable1 *)
 include Comparable1.Make(struct

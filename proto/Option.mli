@@ -33,6 +33,9 @@ val option : ('a -> 'b) -> (unit -> 'b) -> 'a option -> 'b
       assert (Some 42 |> option (fun () -> 0) ((+) 1) = 43);
     ]} *)
 
+val is_empty : 'a t -> bool
+(** [is_empty opt] is [true] if the option is [None] and [false] otherwise. *)
+
 val ( or ) : 'a option -> 'a -> 'a
 (** [opt or x] is the flipped infix version of [with_default] equivalent to
     [with_default (fun () -> x) opt].
@@ -92,6 +95,15 @@ val catch : (unit -> 'a) -> 'a option
 
     {[
       Option.catch read_line or "nothing"
+    ]} *)
+
+val each : ('a -> unit) -> 'a option -> unit
+(** [each f self] apply an effectful function [f] to the value wrapped in
+    [self] or do nothing if [self] contains no value.
+
+    {[
+      Option.each print (Some "hey");
+      Option.each print None
     ]} *)
 
 (** {6 Implemented instances} *)
