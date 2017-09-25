@@ -267,7 +267,7 @@ val is : 'a -> 'a -> bool
 type 'a printer = Format.formatter -> 'a -> unit
 (** The type for pretty-printers of values of type ['a]. *)
 
-val format : ('a, unit, string) format -> 'a
+val format : ('a, Format.formatter, unit, string) format4 -> 'a
 (** [format fmt (arg1 ... argN)] formats the arguments [arg1] to [arnN]
     according to the format string [fmt] and returns the result as a string.
 
@@ -276,7 +276,7 @@ val format : ('a, unit, string) format -> 'a
     and conversion specifications, each of which causes conversion and printing
     of arguments. For more details see the {!Format} module.
 
-    It is an alias for [Format.sprintf].
+    It is an alias for [Format.asprintf].
 
     {[
       assert (format "x = %d" 42 = "x = 42");
