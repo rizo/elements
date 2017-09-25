@@ -549,8 +549,8 @@ val raise : ?trace: bool -> exn -> 'a
         with Not_found -> true)
     ]} *)
 
-val raises : ?exn: exn -> (unit -> 'a) -> bool
-(** [raises ?exn f] is [true] if the exception [exn] is raised while calling
+val raises : ?only: exn -> (unit -> 'a) -> bool
+(** [raises ?only f] is [true] if the exception [exn] is raised while calling
     [f], [false] otherwise. If no [exn] is given, will return [true] on any
     exception.
 
@@ -895,6 +895,7 @@ module Data : sig
   module Either : module type of Either
   module Option : module type of Option
   module Result : module type of Result
+  module List   : module type of List
   module Stream : module type of Stream
   module Tuple  : module type of Tuple
   module Void   : module type of Void
