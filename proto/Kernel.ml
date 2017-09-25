@@ -216,7 +216,7 @@ let is = P.( == )
 
 type 'a printer = Format.formatter -> 'a -> unit
 
-let format = Printf.sprintf
+let format = Format.sprintf
 
 let print ?(out = P.stdout) ?(endline = "\n") str =
   P.output_string out (str ^ endline)
