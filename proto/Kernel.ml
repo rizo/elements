@@ -40,7 +40,7 @@ module type Equatable = sig
   type t
 
   val equal : t -> t -> bool
-  val (=)   : t -> t -> bool
+  val (==)  : t -> t -> bool
   val (<>)  : t -> t -> bool
 end
 
@@ -55,7 +55,7 @@ module Equatable = struct
   module Make(B : Base) : (Equatable with type t := B.t) = struct
     include B
 
-    let (=)  a b = equal a b
+    let (==)  a b = equal a b
     let (<>) a b = not (equal a b)
   end
 end
@@ -124,11 +124,6 @@ module Comparable = struct
 end
 
 
-let less    = Comparable.less
-let equal   = Comparable.equal
-let greater = Comparable.greater
-
-
 module type Comparable1 = sig
   type 'a t
 
@@ -152,8 +147,8 @@ module Comparable1 = struct
   module Make(B : Base) : (Comparable1 with type 'a t := 'a B.t) = struct
     include B
 
-    let min cmp a b = if compare cmp a b = less    then a else b
-    let max cmp a b = if compare cmp a b = greater then a else b
+    let min cmp a b = if compare cmp a b = Comparable.less    then a else b
+    let max cmp a b = if compare cmp a b = Comparable.greater then a else b
   end
 end
 
@@ -191,15 +186,16 @@ module Comparable2 = struct
 
     include B
 
-    let min cmp1 cmp2 a b = if compare cmp1 cmp2 a b = less    then a else b
-    let max cmp1 cmp2 a b = if compare cmp1 cmp2 a b = greater then a else b
+    let min cmp1 cmp2 a b = if compare cmp1 cmp2 a b = Comparable.less    then a else b
+    let max cmp1 cmp2 a b = if compare cmp1 cmp2 a b = Comparable.greater then a else b
   end
 end
 
 
 let compare = P.compare
+let equal = P.( = )
 
-let ( =  ) = P.( =  )
+let ( == ) = P.( =  )
 let ( <> ) = P.( <> )
 let ( <  ) = P.( <  )
 let ( >  ) = P.( >  )
@@ -356,8 +352,8 @@ end
 module type Enumerable = sig
   type t
 
-  val pred : t -> t option
-  val succ : t -> t option
+  val predecessor : t -> t
+  val successor : t -> t
 end
 
 module type Numeric = sig
@@ -461,13 +457,13 @@ module Bool = struct
   let default = false
 
   (* Enumerable *)
-  let pred = function
-    | true  -> Some false
-    | false -> None
+  let predecessor = function
+    | true  -> false
+    | false -> fail "Bool.predecessor"
 
-  let succ = function
-    | true  -> None
-    | false -> Some true
+  let successor = function
+    | true  -> fail "Bool.successor"
+    | false -> true
 
   (* Equatable *)
   include Equatable.Make(struct
@@ -531,17 +527,17 @@ module Int = struct
   let default = 0
 
   (* Enumerable *)
-  let pred x =
+  let predecessor x =
     if x > min_value then
-      Some (x - 1)
+      x - 1
     else
-      None
+      fail "Int.predecessor"
 
-  let succ x =
+  let successor x =
     if x < max_value then
-      Some (x + 1)
+      x + 1
     else
-      None
+      fail "Int.successor"
 
   (* Equatable *)
   include Equatable.Make(struct
@@ -729,17 +725,17 @@ module Char = struct
   let default = P.char_of_int 0xFF
 
   (* Enumerable *)
-  let pred self =
+  let predecessor self =
     if self > min_value then
-      Some (P.char_of_int (to_int self - 1))
+      P.char_of_int (to_int self - 1)
     else
-      None
+      fail "Char.predecessor"
 
-  let succ self =
+  let successor self =
     if self < max_value then
-      Some (P.char_of_int (to_int self + 1))
+      P.char_of_int (to_int self + 1)
     else
-      None
+      fail "Char.successor"
 
   (* Hashable *)
   let hash x = Hashtbl.hash x
@@ -779,3 +775,24 @@ let uncurry f (x, y) = f x y
 let compose f g x = f (g x)
 let ( << ) f g = compose f g
 let ( >> ) g f = compose f g
+
+
+(* Optional operations *)
+let ( or ) opt default =
+  match opt with
+  | Some x -> x
+  | None   -> default
+
+let or_else default opt =
+  match opt with
+  | Some x -> x
+  | None   -> default ()
+
+(* Tuple operations *)
+let first  = Pervasives.fst
+let second = Pervasives.snd
+
+
+(* Either type *)
+type ('a, 'b) either = Left of 'a | Right of 'b
+

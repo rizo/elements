@@ -5,6 +5,7 @@
   (public_name proto.kernel)
   (wrapped true)
   (libraries (proto.shadow-stdlib))
+  (ocamlopt_flags (:standard -O3))
   (modules (Kernel))))
 
 (library
@@ -12,8 +13,10 @@
   (public_name proto)
   (wrapped true)
   (libraries (proto.kernel proto.shadow-stdlib))
+  (ocamlopt_flags (:standard -O3))
   (modules (Array
             Control
+            Collection
             Dict
             Either
             List

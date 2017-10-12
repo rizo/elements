@@ -19,15 +19,8 @@ let option f default self =
   | Some x -> f x
   | None   -> default ()
 
-let or_else default self =
-  match self with
-  | Some x -> x
-  | None   -> default ()
-
-let ( or ) self default =
-  match self with
-  | Some x -> x
-  | None   -> default
+let or_else = Kernel.or_else
+let (or) = Kernel.(or)
 
 let force self =
   match self with

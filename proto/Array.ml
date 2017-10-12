@@ -1,31 +1,57 @@
+open Kernel
 
 module Stdlib = Proto_shadow_stdlib
 
 type 'a t = 'a array
 
-external idx : 'a array -> int -> 'a = "%array_unsafe_get"
-external len : 'a array -> int = "%array_length"
-external get_exn : 'a array -> int -> 'a = "%array_safe_get"
-external set: 'a array -> int -> 'a -> unit = "%array_safe_set"
-external unsafe_get: 'a array -> int -> 'a = "%array_unsafe_get"
-external unsafe_set: 'a array -> int -> 'a -> unit = "%array_unsafe_set"
-external make: int -> 'a -> 'a array = "caml_make_vect"
-external unsafe_sub : 'a array -> int -> int -> 'a array = "caml_array_sub"
-external append_prim : 'a array -> 'a array -> 'a array = "caml_array_append"
-external concat : 'a array list -> 'a array = "caml_array_concat"
-external unsafe_blit : 'a array -> int -> 'a array -> int -> int -> unit = "caml_array_blit"
-external make_float: int -> float array = "caml_make_float_vect"
+let make = Stdlib.Array.init
 
-let init   = Stdlib.Array.init
-let blit   = Stdlib.Array.blit
-let copy   = Stdlib.Array.copy
+let uncheked_get i self =
+  Stdlib.Array.unsafe_get self i
+
+let length = Stdlib.Array.length
+
 let append = Stdlib.Array.append
-let fill   = Stdlib.Array.fill
-let sort   = Stdlib.Array.sort
 
-let copy_and_add a x =
-  let a_len = len a in
-  let new_a = make (a_len + 1) x in
-  blit a 0 new_a 0 a_len;
-  new_a
+let foldk f init self =
+  let n = length self in
+  let rec go i r =
+    if Int.(i == n) then r
+    else f (uncheked_get i self) r (fun r' -> go (i + 1) r') in
+  go 0 init
+
+
+let inspect index f r self =
+  if equal index (length self) then r
+  else f (uncheked_get index self)
+
+
+module Indexable_base = struct
+  type nonrec 'a t = 'a t
+  type index = int
+
+  let length = length
+  let unsafe_get i self = Stdlib.Array.unsafe_get self i
+end
+
+include Collection.Container.With_indexable(Indexable_base)
+
+module Iterable_base = struct
+  type 'a t = 'a array
+  type 'a state = int
+
+  let init a = 0
+
+  let next f r state self =
+    if state = length self then r
+    else f (Stdlib.Array.unsafe_get self state) (state + 1)
+end
+include Collection.Iterable.Make(Iterable_base)
+
+
+module Unsafe = struct
+  let get i self =
+    Stdlib.Array.get self i
+end
+
 

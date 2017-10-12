@@ -1,6 +1,6 @@
 
 
-type ('a, 'b) t = Left of 'a | Right of 'b
+type ('a, 'b) t = ('a, 'b) Kernel.either = Left of 'a | Right of 'b
 
 let return x = Right x
 

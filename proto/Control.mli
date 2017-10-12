@@ -80,11 +80,32 @@ module Monoid0 : sig
 end
 
 
+(** A type is a [Semigroup] if it implements an associative operation.
+
+    Instances of the class are required to satisfy the following law:
+
+      {e Associativity:} [(x ++ y) ++ z = x ++ (y ++ z)] *)
 module type Semigroup = sig
   type 'a t
 
   val append : 'a t -> 'a t -> 'a t
-  val (++) : 'a t -> 'a t -> 'a t
+  (** [append self other] is an associative binary operation. One example of a
+      [Semigroup] is [String], with [append] defined as string concatenation.
+
+      @see: (++)
+
+      Examples for instances:
+
+      {[
+        assert (List.append [1; 2] [3; 4; 5] == [1; 2; 3; 4; 5]);
+        assert (String.append "abc" "def" == "abcdef");
+        assert (Option.append String.append (Some "foo") (Some "bar") == Some "foobar"));
+        assert (Option.append String.append None (Some "hello") == Some "foobar"));
+      ]} *)
+
+  val ( ++ ) : 'a t -> 'a t -> 'a t
+  (** [self ++ other] is [append self other], {e i.e.}, an infix version of
+      [append]. *)
 end
 
 module Semigroup : sig
@@ -110,7 +131,7 @@ module Monoid : sig
   module type Base = sig
     type 'a t
     val empty : 'a t
-    val append : 'a t -> 'a t -> 'a t
+    include Semigroup.Base with type 'a t := 'a t
   end
 
   module Make(B : Base) : Monoid with type 'a t := 'a B.t

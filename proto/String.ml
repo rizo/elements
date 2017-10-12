@@ -4,6 +4,7 @@ open Kernel
 (* include Caml.String *)
 
 type t = Stdlib.String.t
+type item = char
 
 let split ?(on=' ') str =
   let rec indices acc i =
@@ -21,6 +22,37 @@ let split ?(on=' ') str =
     | _ -> acc
   in
   aux [] is
+
+let length = Stdlib.String.length
+
+let inspect index f r self =
+  if equal index (length self) then r
+  else f (Stdlib.String.unsafe_get self index)
+
+
+module Indexable_base = struct
+  type t = string
+  type index = int
+  type item = char
+
+  let length = length
+  let unsafe_get i self = Stdlib.String.unsafe_get self i
+end
+
+include Collection.Container0.With_indexable(Indexable_base)
+
+module Iterable_base = struct
+  type t = string
+  type state = int
+  type item = char
+
+  let init a = 0
+
+  let next f r state self =
+    if state = Stdlib.String.length self then r
+    else f (Stdlib.String.unsafe_get self state) (state + 1)
+end
+include Collection.Iterable0.Make(Iterable_base)
 
 (* Printable instance *)
 include Printable.Make(struct

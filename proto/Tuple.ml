@@ -38,6 +38,6 @@ end
 
 module Pair = Tuple2
 
-let first  = Pair.first
-let second = Pair.second
+let first = Kernel.first
+let second = Kernel.second
 

@@ -1,5 +1,4 @@
 module Stdlib = Proto_shadow_stdlib
-open Kernel
 
 type 'a t = Empty | Yield of 'a * (unit -> 'a t)
 
@@ -87,7 +86,7 @@ let of_array a =
 
 let to_array s =
   let curr = ref s in
-  Array.init (length s) (fun _ ->
+  Array.make (length s) (fun _ ->
       match !curr with
       | Yield (x, s') -> curr := s' (); x
       | Empty          -> assert false)
@@ -104,10 +103,10 @@ let to_channel c s =
 (* Combinators *)
 
 (* val or : bool list -> bool *)
-let or_ s = fold (fun r a -> r || a) false s
+let or' s = fold (fun r a -> r || a) false s
 
 (* val any : ('a -> bool) -> 'a t -> bool *)
-let any f s = or_ (map f s)
+let any f s = or' (map f s)
 
 module type S = sig
   type 'a t
@@ -140,8 +139,8 @@ module type S = sig
   val iterate : ('a -> 'a) -> 'a -> 'a t
   val join : ('a -> 'b -> 'c option) -> 'a t -> 'b t -> 'c t
   val map : ('a -> 'b) -> 'a t -> 'b t
-  val max : ?cmp: ('a -> 'a -> order) -> 'a t -> 'a
-  val min : ?cmp: ('a -> 'a -> order) -> 'a t -> 'a
+  val max : ?cmp: ('a -> 'a -> int) -> 'a t -> 'a
+  val min : ?cmp: ('a -> 'a -> int) -> 'a t -> 'a
   val nth : int -> 'a t -> 'a option
   val or_ : bool t -> bool
   val partition : ('a -> bool) -> 'a t -> ('a t * 'a t)
@@ -153,7 +152,7 @@ module type S = sig
   val scanl : ('r -> 'a -> 'r) -> 'r -> 'a t -> 'r t
   val scanr : ('a -> 'r -> 'r) -> 'r -> 'a t -> 'r t
   val slice : int -> int -> 'a t -> 'a t
-  val sort : ?by:('a -> 'a -> order) -> ?on: ('a -> 'b) -> 'a t -> 'a t
+  val sort : ?by:('a -> 'a -> int) -> ?on: ('a -> 'b) -> 'a t -> 'a t
   val split : at: int -> 'a t -> ('a t * 'a t)
   val split_while : ('a -> bool) -> 'a t -> ('a t * 'a t)
   val take : int -> 'a t -> 'a t

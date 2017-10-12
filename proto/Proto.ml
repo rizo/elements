@@ -25,8 +25,6 @@ type void = Data.Void.t
 
 (* Tuples *)
 type ('a, 'b) pair = ('a, 'b) Data.Tuple.pair
-let first = Data.Tuple.first
-let second = Data.Tuple.second
 
 (* Option *)
 let some = Data.Option.some
@@ -34,8 +32,6 @@ let none = Data.Option.none
 let is_some = Data.Option.is_some
 let is_none = Data.Option.is_none
 let option = Data.Option.option
-let ( or ) = Data.Option.( or )
-let or_else = Data.Option.or_else
 let or_fail = Data.Option.or_fail
 
 (* Result *)

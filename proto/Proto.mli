@@ -26,9 +26,9 @@ module type Equatable = sig
 
   val equal : t -> t -> bool
 
-  val (=) : t -> t -> bool
+  val ( == ) : t -> t -> bool
 
-  val (<>) : t -> t -> bool
+  val ( <> ) : t -> t -> bool
 end
 
 
@@ -200,7 +200,8 @@ val compare : 'a -> 'a -> order
     [compare] applied to functional values may raise [Invalid_argument].
     [compare] applied to cyclic structures may not terminate. *)
 
-val ( = ) : 'a -> 'a -> bool
+val equal : 'a -> 'a -> bool
+val ( == ) : 'a -> 'a -> bool
 (** [a = b] tests for structural equality of [a] and [b]. Mutable
     structures (e.g. references and arrays) are equal if and only if their
     current contents are structurally equal, even if the two mutable objects
@@ -210,7 +211,7 @@ val ( = ) : 'a -> 'a -> bool
     Equality between cyclic data structures may not terminate. *)
 
 val ( <> ) : 'a -> 'a -> bool
-(** [a <> b] is [not (a = b)], {e i.e.}, the negation of {!(=)}. *)
+(** [a <> b] is [not (a == b)], {e i.e.}, the negation of {!(==)}. *)
 
 val ( <  ) : 'a -> 'a -> bool
 val ( >  ) : 'a -> 'a -> bool
@@ -221,7 +222,7 @@ val ( >= ) : 'a -> 'a -> bool
     These functions coincide with the usual orderings over integers,
     characters, strings, byte sequences and floating-point numbers, and extend
     them to a total ordering over all types.  The ordering is compatible with
-    {!(=)}. As in the case of {!(=)}, mutable structures are compared by
+    {!(==)}. As in the case of {!(==)}, mutable structures are compared by
     contents.
 
     Comparison between functional values raises [Invalid_argument].  Comparison
@@ -481,12 +482,12 @@ end
 module type Enumerable = sig
   type t
 
-  val pred : t -> t option
+  val predecessor : t -> t
   (** [pred self] is the predecessor of [self].
 
       @raise No_value if [self] has no predecessor. *)
 
-  val succ : t -> t option
+  val successor : t -> t
   (** [succ self] is the successor of [self].
 
       @raise No_value if [self] has no successor. *)
@@ -906,7 +907,9 @@ module Data : sig
   module Option : module type of Option
   module Result : module type of Result
   module List   : module type of List
+  module Array  : module type of Array
   module Stream : module type of Stream
+  module String : module type of String
   module Tuple  : module type of Tuple
   module Void   : module type of Void
 end
@@ -980,6 +983,11 @@ val is_error : ('a, 'e) result -> bool
 
 val result : ('a -> 'b) -> ('e -> 'b) -> ('a, 'e) result -> 'b
 (** Global alias for {!Result.result}. *)
+
+
+(* (** {6 Global either definitions} *) *)
+
+type ('a, 'b) either = Left of 'a | Right of 'b
 
 
 (*---------------------------------------------------------------------------
