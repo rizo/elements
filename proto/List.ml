@@ -1,10 +1,97 @@
 
 open Kernel
 open Control
-
-module Stdlib = Proto_shadow_stdlib
+open Collection
 
 type 'a t = 'a list
+
+
+(* Monoid instance *)
+include Monoid.Make(struct
+    type nonrec 'a t = 'a t
+    let empty = []
+
+    let slow_append l1 l2 =
+      Stdlib.List.rev_append (Stdlib.List.rev l1) l2
+
+    let rec count_append l1 l2 count =
+      match l2 with
+      | [] -> l1
+      | _ ->
+          match l1 with
+          | []               ->                         l2
+          | [x1]             -> x1                   :: l2
+          | [x1; x2]         -> x1 :: x2             :: l2
+          | [x1; x2; x3]     -> x1 :: x2 :: x3       :: l2
+          | [x1; x2; x3; x4] -> x1 :: x2 :: x3 :: x4 :: l2
+          | x1 :: x2 :: x3 :: x4 :: x5 :: tl ->
+              x1 :: x2 :: x3 :: x4 :: x5 ::
+              (if count > 1000
+               then slow_append  tl l2
+               else count_append tl l2 (count + 1))
+
+    let append self other =
+      count_append self other 0
+  end)
+
+
+(* Default1 instance *)
+let default = empty
+
+
+(* Comparable instance *)
+include Comparable1.Make(struct
+    type nonrec 'a t = 'a t
+
+    let compare cmp a b =
+      let rec loop a b =
+        match a, b with
+        | [], [] -> Comparable.equal
+        | [], _  -> Comparable.less
+        | _ , [] -> Comparable.greater
+        | x :: xs, y :: ys ->
+            let n = cmp x y in
+            if n = Comparable.equal
+            then loop xs ys
+            else n in
+      loop a b
+  end)
+
+
+(* Functor instance *)
+include Functor.Make(struct
+    type nonrec 'a t = 'a t
+
+    (* Based on Petter A. Urkedal's implementation
+       Link: https://discuss.ocaml.org/t/a-new-list-map-that-is-both-stack-safe-and-fast/865/10 *)
+    let map f xs =
+      let rec rise ys = function
+      | [] -> ys
+      | (y0, y1, y2, y3, y4, y5, y6, y7) :: bs ->
+          rise (y0 :: y1 :: y2 :: y3 :: y4 :: y5 :: y6 :: y7 :: ys) bs in
+      let rec dive bs = function
+      | x0 :: x1 :: x2 :: x3 :: x4 :: x5 :: x6 :: x7 :: xs ->
+          dive ((f x0, f x1, f x2, f x3, f x4, f x5, f x6, f x7) :: bs) xs
+      | xs -> rise (Stdlib.List.map f xs) bs in
+      dive [] xs
+  end)
+
+
+(* Iterable & Container instance *)
+module Basic_iterable = struct
+  type nonrec 'a t = 'a t
+  type 'a state = 'a t
+
+  let init self = self
+
+  let next self s f r =
+    match s with
+    | [] -> r
+    | a :: s' -> f a s'
+end
+include Iterable.Make(Basic_iterable)
+include Container.With_iterable(Basic_iterable)
+
 
 (* FIXME: -n *)
 let make n f =
@@ -39,6 +126,7 @@ let tail self =
   | [] -> None
   | _ :: xs -> Some xs
 
+
 (* {e Complexity:} O(2n), if [n] is negative. *)
 (* let get n self = *)
 (*   let rec loop i n self' = *)
@@ -49,22 +137,6 @@ let tail self =
 (*   if n < 0 then *)
 (*     loop 0 (Int.abs n - 1) (reverse self) *)
 (*   else loop 0 n self *)
-
-
-module Iterable_base = struct
-  type nonrec 'a t = 'a t
-  type 'a state = 'a t
-
-  let init self = self
-
-  let next f r s self =
-    match s with
-    | [] -> r
-    | a :: s' -> f a s'
-end
-
-include Collection.Iterable.Make(Iterable_base)
-include Collection.Container.With_iterable(Iterable_base)
 
 
 let rec fold_right f acc self =
@@ -86,33 +158,6 @@ let reverse_indexed ?from:(i = 0) self =
 let indexed ?from:(i = 0) self =
   reverse (reverse_indexed ~from:i self)
 
-
-(* append *)
-
-let slow_append l1 l2 =
-  Stdlib.List.rev_append (Stdlib.List.rev l1) l2
-
-let rec count_append l1 l2 count =
-  match l2 with
-  | [] -> l1
-  | _ ->
-    match l1 with
-    | []               ->                         l2
-    | [x1]             -> x1                   :: l2
-    | [x1; x2]         -> x1 :: x2             :: l2
-    | [x1; x2; x3]     -> x1 :: x2 :: x3       :: l2
-    | [x1; x2; x3; x4] -> x1 :: x2 :: x3 :: x4 :: l2
-    | x1 :: x2 :: x3 :: x4 :: x5 :: tl ->
-      x1 :: x2 :: x3 :: x4 :: x5 ::
-      (if count > 1000
-       then slow_append  tl l2
-       else count_append tl l2 (count + 1))
-
-let append self other =
-  count_append self other 0
-
-let ( ++ ) = append
-
 let concat l = fold_right append [] l
 
 let chunks size self =
@@ -126,37 +171,6 @@ let chunks size self =
       | x :: xs when i = size -> loop 1 [x] (reverse chunk :: res) xs
       | x :: xs -> loop (i + 1) (x :: chunk) res xs in
     reverse (loop 0 [] [] self)
-
-
-(* let find_fold_while predicate self = *)
-(*   fold_while *)
-(*     (fun a b -> if predicate a then Stop (Some a) else Continue b) *)
-(*     None self *)
-
-(* let rec find predicate self = *)
-(*   match self with *)
-(*   | [] -> None *)
-(*   | x :: xs when predicate x -> Some x *)
-(*   | _ :: xs -> find predicate xs *)
-
-(* let find_index predicate self = *)
-(*   let rec loop predicate i self' = *)
-(*     match self' with *)
-(*     | [] -> None *)
-(*     | x :: _ when predicate x -> Some i *)
-(*     | _ :: xs -> loop predicate (i + 1) xs in *)
-(*   loop predicate 0 self *)
-
-(* let find_indices predicate self = *)
-(*   let rec loop predicate i res self' = *)
-(*     match self' with *)
-(*     | [] -> reverse res *)
-(*     | x :: xs when predicate x -> loop predicate (i + 1) (i :: res) xs *)
-(*     | _ :: xs -> loop predicate (i + 1) res xs in *)
-(*   loop predicate 0 [] self *)
-
-(* let contains x self = *)
-(*   Option.is_some (find (fun a -> a = x) self) *)
 
 let of_array = Stdlib.Array.to_list
 
@@ -172,7 +186,6 @@ let pairwise self =
       | x0 :: (x1 :: _ as xs) ->
         loop ((x0, x1) :: r) xs in
     loop [] self
-
 
 
 (* Processing functions *)
@@ -217,47 +230,4 @@ module Unsafe = struct
       raise (Invalid_argument (format "negative index %d" n))
     else loop 0 self
 end
-
-
-include Monoid.Make(struct
-    type nonrec 'a t = 'a t
-    let empty = []
-    let append = append
-  end)
-
-
-module Comparable = Comparable1.Make(struct
-    type nonrec 'a t = 'a t
-
-    let compare cmp a b =
-      let rec loop a b =
-        match a, b with
-        | [], [] -> Comparable.equal
-        | [], _  -> Comparable.less
-        | _ , [] -> Comparable.greater
-        | x :: xs, y :: ys ->
-            let n = cmp x y in
-            if n = Comparable.equal
-            then loop xs ys
-            else n in
-      loop a b
-  end)
-
-
-include Functor.Make(struct
-    type nonrec 'a t = 'a t
-
-    (* Based on Petter A. Urkedal's implementation
-       Link: https://discuss.ocaml.org/t/a-new-list-map-that-is-both-stack-safe-and-fast/865/10 *)
-    let map f xs =
-      let rec rise ys = function
-      | [] -> ys
-      | (y0, y1, y2, y3, y4, y5, y6, y7) :: bs ->
-          rise (y0 :: y1 :: y2 :: y3 :: y4 :: y5 :: y6 :: y7 :: ys) bs in
-      let rec dive bs = function
-      | x0 :: x1 :: x2 :: x3 :: x4 :: x5 :: x6 :: x7 :: xs ->
-          dive ((f x0, f x1, f x2, f x3, f x4, f x5, f x6, f x7) :: bs) xs
-      | xs -> rise (Stdlib.List.map f xs) bs in
-      dive [] xs
-  end)
 

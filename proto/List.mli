@@ -22,20 +22,25 @@ val make : int -> (int -> 'a) -> 'a t
 
 (* To be included as the [Collection] class. *)
 val add : 'a -> 'a t -> 'a t
+
 val tail : 'a t -> 'a list option
+
 val reverse : 'a t -> 'a t
+
 val indexed : ?from: int -> 'a t -> (int * 'a) t
-val ( ++ ) : 'a t -> 'a t -> 'a t
+
 val concat : 'a t t -> 'a t
+
 val chunks : int -> 'a t -> 'a t t
+
 val of_array : 'a array -> 'a t
 
 val inspect : ('a -> 'a t -> 'r) -> 'r -> 'a t -> 'r
+
 val foldk : ('a -> 'r -> ('r -> 'r) -> 'r) -> 'r -> 'a t -> 'r
 
-(** {6 Processing functions} *)
-
 val take : int -> 'a t -> 'a t
+
 
 module Unsafe : sig
   val head : 'a t -> 'a
@@ -55,9 +60,12 @@ module Unsafe : sig
       @raise [Invalid_argument "List.Unsafe.get"] if [i] is negative. *)
 end
 
+
 (** {6 Implemented instances} *)
-include Functor   with type 'a t := 'a t
-include Iterable  with type 'a t := 'a t
-include Container with type 'a t := 'a t
-include Monoid    with type 'a t := 'a t
+include Functor     with type 'a t := 'a t
+include Iterable    with type 'a t := 'a t
+include Container   with type 'a t := 'a t
+include Monoid      with type 'a t := 'a t
+include Default1    with type 'a t := 'a t
+include Comparable1 with type 'a t := 'a t
 

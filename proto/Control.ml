@@ -221,8 +221,7 @@ module type Functor = sig
   type 'a t
 
   val map : ('a -> 'b) -> 'a t -> 'b t
-  val (<$>) : ('a -> 'b) -> 'a t -> 'b t
-  val ( |>) : 'a t -> ('a -> 'b ) -> 'b t
+  val (<@>) : ('a -> 'b) -> 'a t -> 'b t
 end
 
 
@@ -236,9 +235,7 @@ module Functor = struct
   module Make(B : Base) : (Functor with type 'a t := 'a B.t) = struct
     include B
 
-    let ( <$> ) f m = map f m
-
-    let (|>) m f = map f m
+    let ( <@> ) f m = map f m
   end
 
   module With_monad(M : Monad.Base) : (Functor with type 'a t := 'a M.t) = struct
@@ -256,8 +253,7 @@ module type Functor2 = sig
   type ('a, 'x) t
 
   val map : ('a -> 'b) -> ('a, 'x) t -> ('b, 'x) t
-  val (<$>) : ('a -> 'b ) -> ('a, 'x) t -> ('b, 'x) t
-  val ( |>) : ('a, 'x) t -> ('a -> 'b ) -> ('b, 'x) t
+  val (<@>) : ('a -> 'b ) -> ('a, 'x) t -> ('b, 'x) t
 end
 
 
@@ -271,10 +267,8 @@ module Functor2 = struct
   module Make(B : Base) = struct
     include B
 
-    let ( <$> ) f m =
+    let ( <@> ) f m =
       map f m
-
-    let (|>) m f = map f m
   end
 
   module With_monad(M : Monad2.Base) : (Functor2 with type ('a, 'x) t := ('a, 'x) M.t) = struct
@@ -714,6 +708,15 @@ module IxMonad = struct
 
   let get   = fun s -> (s,  s)
   let put s = fun _ -> ((), s)
+end
+
+
+module type Foldable = sig
+  type 'a t
+
+  val foldl : ('a -> 'r -> 'r) -> 'r -> 'a t -> 'r
+  val foldr : ('a -> 'r -> 'r) -> 'r -> 'a t -> 'r
+  val foldk : ('a -> 'r -> ('r -> 'r) -> 'r) -> 'r -> 'a t -> 'r
 end
 
 

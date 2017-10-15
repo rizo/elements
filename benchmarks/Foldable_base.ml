@@ -166,7 +166,9 @@ module Fold_break = struct
       None)
 end
 
-let n = 1_000_000
+
+
+let n = 500_000
 let input = Array.(to_list (append (init n (fun x -> x + 1))
                                    (init (n - (n / 2)) (fun x -> x))))
 let run product =
@@ -182,6 +184,7 @@ let () =
       bench "Baseline"            (fun () -> run Baseline.product);
       bench "View_fold"           (fun () -> run View_fold.product);
       bench "Foldk"               (fun () -> run Foldk.product);
+      bench "Proto"               (fun () -> run Proto.Data.List.product);
       (* bench "Foldk'"              (fun () -> Foldk'.bench n input); *)
       (* bench "Fold_break"          (fun () -> Fold_break.bench n input); *)
       (* bench "Uncons_fold"         (fun () -> Uncons_fold.bench n input); *)

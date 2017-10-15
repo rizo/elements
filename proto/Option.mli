@@ -77,16 +77,16 @@ val or_fail : string -> 'a option -> 'a
       assert (List.head [1; 2; 3] |> Option.or_fail "empty list" = 1);
     ]} *)
 
-val ( |> ) : 'a option -> ('a -> 'b) -> 'b option
-(** [opt |> f] will apply [f] to the value wrapped by [opt], returning an
-    option with the resulting value, or [None] if [opt] does not not have any
+val ( <@> ) : 'a option -> ('a -> 'b) -> 'b option
+(** [f <@> self] will apply [f] to the value wrapped by [self], returning an
+    option with the resulting value, or [None] if [self] does not not have any
     value. This operator is an infix version of [map].
 
     Examples:
 
     {[
-      assert (Some [1; 2; 3] |> List.reverse = Some [3; 2; 1]);
-      assert (None |> Int.to_string = None);
+      assert (List.reverse <@> Some [1; 2; 3] == Some [3; 2; 1]);
+      assert (Int.to_string <@> None == None);
     ]} *)
 
 val force : 'a option -> 'a

@@ -108,6 +108,7 @@ let or' s = fold (fun r a -> r || a) false s
 (* val any : ('a -> bool) -> 'a t -> bool *)
 let any f s = or' (map f s)
 
+
 module type S = sig
   type 'a t
   val all : ('a -> bool) -> 'a t -> bool
@@ -128,6 +129,8 @@ module type S = sig
   val find : ('a -> bool) -> 'a t -> 'a t
   val find_index : ('a -> bool) -> 'a list -> int option
   val find_indices : ('a -> bool) -> 'a list -> int list
+  val find_max : ?by: ('a -> 'a -> int) -> 'a t -> 'a
+  val find_min : ?by: ('a -> 'a -> int) -> 'a t -> 'a
   val flat_map : ('a -> 'b list) -> 'a list -> 'b list
   val fold_left : ('r -> 'a -> 'r) -> 'r -> 'a t -> 'r
   val fold_right : ('a -> 'r -> 'r) -> 'r -> 'a t -> 'r
@@ -139,10 +142,9 @@ module type S = sig
   val iterate : ('a -> 'a) -> 'a -> 'a t
   val join : ('a -> 'b -> 'c option) -> 'a t -> 'b t -> 'c t
   val map : ('a -> 'b) -> 'a t -> 'b t
-  val max : ?cmp: ('a -> 'a -> int) -> 'a t -> 'a
-  val min : ?cmp: ('a -> 'a -> int) -> 'a t -> 'a
   val nth : int -> 'a t -> 'a option
-  val or_ : bool t -> bool
+  val bool_or : bool t -> bool
+  val bool_and : bool t -> bool
   val partition : ('a -> bool) -> 'a t -> ('a t * 'a t)
   val reduce : ('r -> 'a -> 'r) -> 'a t -> 'r option
   val reject : ('a -> bool) -> 'a t -> 't

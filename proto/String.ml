@@ -1,9 +1,6 @@
-module Stdlib = Proto_shadow_stdlib
 open Kernel
 
-(* include Caml.String *)
-
-type t = Stdlib.String.t
+type t = string
 type item = char
 
 let split ?(on=' ') str =
@@ -48,7 +45,7 @@ module Iterable_base = struct
 
   let init a = 0
 
-  let next f r state self =
+  let next self state f r =
     if state = Stdlib.String.length self then r
     else f (Stdlib.String.unsafe_get self state) (state + 1)
 end

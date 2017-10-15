@@ -301,6 +301,12 @@ module Iter_k_stack_closure = struct
 end
 
 
+module Proto_impl = struct
+  let bench n a =
+    assert (Proto.Data.Array.find (equal n) a = Some n)
+end
+
+
 let n = 250_000 - 1
 let input = Array.init 1_000_000 (fun x -> x)
 
@@ -313,6 +319,7 @@ let () =
       bench "Iter_mod"                (fun () -> Iter_mod.bench n input);
       bench "Foldk"                   (fun () -> Foldk.bench n input);
       bench "Iter_inspect_2"          (fun () -> Iter_inspect_2.bench n input);
+      bench "Proto_impl"              (fun () -> Proto_impl.bench n input);
       (* bench "Iter_inspect_3"          (fun () -> Iter_inspect_3.bench n input); *)
       (* bench "Iter_inspect_1"          (fun () -> Iter_inspect_1.bench n input); *)
       (* bench "Iter_option"             (fun () -> Iter_option.bench n input); *)

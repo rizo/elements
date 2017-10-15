@@ -99,6 +99,9 @@ module Comparable = struct
   let equal   =  0
   let greater = +1
 
+  let is_less    a ~than:b = compare a b == less
+  let is_greater a ~than:b = compare a b == greater
+
   module type Base = sig
     type t
 

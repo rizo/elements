@@ -21,104 +21,169 @@
 open Kernel
 open Control
 
-(** A container type with the ability to fold on itself.
 
-    The [Foldable] interface describes the operations that sequentially iterate
-    over the elements in a parameterised unary type ['a t] and, starting with
-    an initial value [init], combine the elements togather, using a provided
-    function [f], into a single result. *)
-module type Foldable = sig
-  type 'a t
-
-  val foldl : ('a -> 'r -> 'r) -> 'r -> 'a t -> 'r
-  (** [foldl f init self] uses [f] to sequentially, from left to right, combine
-      the elements of the container [self] with an accumulator value [init].
-
-      {[
-        assert (Array.foldl (+) 0 [|1; 2; 3|] == 6);
-        assert (List.foldl List.add [] [1; 2; 3] == [3; 2; 1]);
-      ]} *)
-
-  val foldr : ('a -> 'r -> 'r) -> 'r -> 'a t -> 'r
-  (** [foldr f init self] is the same as [foldl] but performs the folding from
-      right to left.
-
-      {[
-        assert (Array.foldr (+) 0 [|1; 2; 3|] == 6);
-        assert (List.foldr List.add [] [1; 2; 3] == [1; 2; 3]);
-      ]} *)
-
-  val foldk : ('a -> 'r -> ('r -> 'r) -> 'r) -> 'r -> 'a t -> 'r
-  (** [foldk f init self] is the same as [foldl] but with early termination
-      support. The function [f] is given a continuation argument [('r -> 'r)]
-      that [f] can call to keep folding with an intermediate accumulator, or
-      return the accumulator to immediately stop without consuming more
-      elements.
-
-      {[
-        let count_until_0 =
-          List.foldk
-            (fun x count continue ->
-               if x == 0 then count
-               else continue (count + 1))
-            0
-            [5; 22; 10; 0; 4; 3; 14; 72; 92]
-        in assert (count_until_0 == 3);
-      ]} *)
-end
+type 'a iter =
+  Iter : {
+    init : 's;
+    next : 'r . 's -> ('a -> 's -> 'r) -> 'r -> 'r
+  } -> 'a iter
 
 
-module Foldable = struct
-  module type Base = sig
-    type 'a t
+module Iter = struct
+  type 'a t = 'a iter
 
-    val foldl : ('a -> 'r -> 'r) -> 'r -> 'a t -> 'r
+  let each f (Iter i) =
+    let rec go s =
+      i.next s (fun a s' -> f a; go s') () in
+    go i.init
 
-    val foldr : ('a -> 'r -> 'r) -> 'r -> 'a t -> 'r
+  let fold_state s0 f r0 next =
+    let rec go r s =
+      next s (fun a -> go (f a r)) r in
+    go r0 s0
 
-    val foldk : ('a -> 'r -> ('r -> 'r) -> 'r) -> 'r -> 'a t -> 'r
-  end
+  let fold f r (Iter i) =
+    fold_state i.init f r i.next
 
-  module Make(B : Base) : Foldable with type 'a t := 'a B.t = struct
-    include B
+  let reduce f (Iter i) =
+    i.next i.init
+      (fun r0 s0 -> Some (fold_state s0 f r0 i.next))
+      None
 
-    let find predicate =
-      foldk
-        (fun a b continue ->
+  let fold_while f r0 (Iter i) =
+    let rec go s r =
+      i.next s
+        (fun a s' ->
+           match f a r with
+           | `Continue r' -> go s' r'
+           | `Stop r' -> r')
+        r in
+    go i.init r0
+
+  let find predicate (Iter i) =
+    let rec go s =
+      i.next s
+        (fun a s' ->
            if predicate a then Some a
-           else continue b)
-        None
+           else go s')
+        None in
+    go i.init
 
-    (*
-     ┌──────────┬──────────┬─────────────┬──────────┬──────────┬────────────┐
-     │ Name     │ Time/Run │     mWd/Run │ mjWd/Run │ Prom/Run │ Percentage │
-     ├──────────┼──────────┼─────────────┼──────────┼──────────┼────────────┤
-     │ Baseline │ 103.17us │       2.00w │          │          │     65.16% │
-     │ Foldk    │ 158.35us │ 150_010.43w │    4.58w │    4.58w │    100.00% │
-     │ View     │  89.51us │       2.00w │          │          │     56.52% │
-     └──────────┴──────────┴─────────────┴──────────┴──────────┴────────────┘
-     *)
-    let find_index predicate self =
-      let state =
-        foldk
-          (fun a (i, res) k ->
-             if predicate a then (i, Some i)
-             else k (i + 1, res))
-          (0, None)
-          self in
-      second state
-  end
+  let find_index predicate (Iter i) =
+    let rec go n s =
+      i.next s
+        (fun a s' ->
+           if predicate a then Some n
+           else go (n + 1) s')
+        None in
+    go 0 i.init
+
+  let find_indices predicate (Iter i) =
+    let rec go n r s =
+      i.next s
+        (fun a s' ->
+           if predicate a then go (n + 1) (n :: r) s'
+           else go (n + 1) r s') r in
+    Stdlib.List.rev (go 0 [] i.init)
+
+  let index ?equal x self =
+    let equal = equal or Kernel.equal in
+    find_index (equal x) self
+
+  let indices ?equal x self =
+    let equal = equal or Kernel.equal in
+    find_indices (equal x) self
+
+  let find_max ?by self =
+    let compare = by or Kernel.compare in
+    let (>) a b = compare a b = Comparable.greater in
+    reduce (fun a b -> if a > b then a else b) self
+
+  let find_min ?by self =
+    let compare = by or Kernel.compare in
+    let (<) a b = compare a b = Comparable.less in
+    reduce (fun a b -> if a < b then a else b) self
+
+  let contains x self =
+    Option.is_some (find ((==) x) self)
+
+  let count predicate (Iter i) =
+    let rec go n s =
+      i.next s
+        (fun a s' ->
+           if predicate a then go (n + 1) s'
+           else go n s')
+        n in
+    go 0 i.init
+
+  let sum self =
+    fold ( + ) 0 self
+
+  let product (Iter i) =
+    let rec go r s =
+      i.next s
+        (fun a s' ->
+           if a = 0 then 0
+           else go (a * r) s')
+        r in
+    go 1 i.init
+
+  let all p (Iter i) =
+    let rec go s =
+      i.next s
+        (fun a s' ->
+           if p a then go s'
+           else false)
+        true in
+    go i.init
+
+  let any p (Iter i) =
+    let rec go s =
+      i.next s
+        (fun a s' ->
+           if p a then go s'
+           else true)
+        false in
+    go i.init
+
+  let to_list_reversed self =
+    fold (fun x xs -> x :: xs) [] self
+
+  let to_list self =
+    Stdlib.List.rev (to_list_reversed self)
+
+  let is_empty (Iter i) =
+    i.next i.init (fun _a _s -> false) true
+
+  let length self =
+    fold (fun _ n -> n + 1) 0 self
+
+  let get n (Iter i) =
+    let rec go idx s =
+      i.next s
+        (fun a s' ->
+           if idx = n then Some a
+           else go (idx + 1) s')
+        None in
+    go 0 i.init
+
+  let first self  = get 0 self
+  let second self = get 1 self
+
+  let last self =
+    fold (fun a _ -> Some a) None self
 end
-
 
 
 (* Should this be called sequential? For both array and list these functions
  * need to iterate the whole collection item by item, potentially stopping
  * early.
- *  - Complexity: O(n)
- *)
-module type Iterable = sig
+ * contains_index?
+ *  - Complexity: O(n) *)
+module type Iterable1 = sig
   type 'a t
+
+  val each : ('a -> unit) -> 'a t -> unit
 
   val find: ('a -> bool) -> 'a t -> 'a option
   (** [find predicate self] returns the first leftmost element from [self]
@@ -170,19 +235,15 @@ module type Iterable = sig
 
   val reduce : ('a -> 'a -> 'a) -> 'a t -> 'a option
 
-  val min : ?by:('a -> 'a -> order) -> 'a t -> 'a option
+  val find_min : ?by:('a -> 'a -> order) -> 'a t -> 'a option
 
-  val max : ?by:('a -> 'a -> order) -> 'a t -> 'a option
+  val find_max : ?by:('a -> 'a -> order) -> 'a t -> 'a option
 
   val sum : int t -> int
   (** [sum self] sums all integers in [self]. *)
 
   val product : int t -> int
   (** [product self] multiplies all integers in [self]. *)
-
-  val to_list : 'a t -> 'a list
-
-  val each : ('a -> unit) -> 'a t -> unit
 
   val contains : 'a -> 'a t -> bool
   (** [contains x self] is equivalent to [is_some (find ((=) x) self)].
@@ -193,7 +254,6 @@ module type Iterable = sig
       ]} *)
 
 
-  (* Foldable? *)
   val count : ('a -> bool) -> 'a t -> int
   (** [count predicate self] is [length (find predicate self)] but computed in
       one go.
@@ -202,147 +262,52 @@ module type Iterable = sig
         assert (count (fun a -> a < 0) [1; -2; 3; -4; 5; 6] == 2);
       ]} *)
 
+  val fold : ('a -> 'r -> 'r) -> 'r -> 'a t -> 'r
+
   val fold_while : ('a -> 'b -> [< `Continue of 'b | `Stop of 'b ]) -> 'b -> 'a t -> 'b
   (** [fold_while predicate f b self] is like [fold] but stops the execution when
       [predicate] returns [false] on an item from [self].
 
       {[
         assert (List.fold_while (fun a b -> if a <= 3 then Continue a + b
-                                            else Stop b) 0 [1; 2; 3; 4] = 6);
+                                  else Stop b) 0 [1; 2; 3; 4] = 6);
       ]} *)
-
-  (* include Foldable with type 'a t := 'a t *)
 end
 
 
-module Iterable = struct
+module Iterable1 = struct
   module type Base = sig
     type 'a t
     type 'a state
 
     val init : 'a t -> 'a state
-    val next : ('a -> 'a state -> 'r) -> 'r -> 'a state -> 'a t -> 'r
+    val next : 'a t -> 'a state -> ('a -> 'a state -> 'r) -> 'r -> 'r
   end
 
-  module Make(B : Base) : Iterable with type 'a t := 'a B.t = struct
-    let fold_state f r0 s0 self =
-      let rec go r s =
-        B.next (fun a -> go (f a r)) r s self in
-      go r0 s0
+  module Make(B : Base) : Iterable1 with type 'a t := 'a B.t = struct
+    let iter self =
+      Iter {
+        init = B.init self;
+        next = (fun s -> B.next self s)
+      }
 
-    let fold f r self =
-      fold_state f r (B.init self) self
-
-    let fold_while f r0 self =
-      let rec go r s =
-        B.next (fun a s' ->
-            match f a r with
-            | `Continue r' -> go r' s'
-            | `Stop r' -> r')
-          r s self in
-      go r0 (B.init self)
-
-    let each f self =
-      let rec go s =
-        B.next (fun a s' -> f a) () s self in
-      go (B.init self)
-
-    let reduce f self =
-      B.next (fun r0 s0 -> Some (fold_state f r0 s0 self)) None (B.init self) self
-
-    let max ?by iter =
-      let cmp = by or Kernel.compare in
-      let max' x y =
-        match cmp x y with 1 -> x | _ -> y in
-      reduce max' iter
-
-    let min ?by iter =
-      let cmp = by or Kernel.compare in
-      let min' x y =
-        match cmp x y with -1 -> x | _ -> y in
-      reduce min' iter
-
-    let find predicate self =
-      let rec go s =
-        B.next
-          (fun a s' ->
-             if predicate a then Some a
-             else go s')
-          None s self in
-      go (B.init self)
-
-    let contains x self =
-      Option.is_some (find ((==) x) self)
-
-    let find_index predicate self =
-      let rec go i s =
-        B.next
-          (fun a s' ->
-             if predicate a then Some i
-             else go (i + 1) s')
-          None s self in
-      go 0 (B.init self)
-
-    let index ?equal x self =
-      let equal = equal or Kernel.equal in
-      find_index (equal x) self
-
-    let find_indices predicate self =
-      let rec go i r s =
-        B.next
-          (fun a s' ->
-             if predicate a then go (i + 1) (i :: r) s'
-             else go (i + 1) r s')
-          r s self in
-      Stdlib.List.rev (go 0 [] (B.init self))
-
-    let indices ?equal x self =
-      let equal = equal or Kernel.equal in
-      find_indices (equal x) self
-
-    let count predicate self =
-      let rec go n s =
-        B.next
-          (fun a s' ->
-             if predicate a then go (n + 1) s'
-             else go n s')
-          n s self in
-      go 0 (B.init self)
-
-    let sum self = fold ( + ) 0 self
-
-    let product self =
-      let rec go r s =
-        B.next
-          (fun a s' ->
-             if Int.(a == 0) then 0
-             else go (a * r) s')
-          r s self in
-      go 1 (B.init self)
-
-    let all p self =
-      let rec go s =
-        B.next
-          (fun a s' ->
-             if p a then go s'
-             else false)
-          true s self in
-      go (B.init self)
-
-    let any p self =
-      let rec go s =
-        B.next
-          (fun a s' ->
-             if p a then go s'
-             else true)
-          false s self in
-      go (B.init self)
-
-    let to_list_reversed self =
-      fold (fun x xs -> x :: xs) [] self
-
-    let to_list self =
-      Stdlib.List.rev (to_list_reversed self)
+    let each f self                 = Iter.each f (iter self)
+    let fold f r self               = Iter.fold f r (iter self)
+    let fold_while f r self         = Iter.fold_while f r (iter self)
+    let reduce f self               = Iter.reduce f (iter self)
+    let find predicate self         = Iter.find predicate (iter self)
+    let find_max ?by self           = Iter.find_max ?by (iter self)
+    let find_min ?by self           = Iter.find_min ?by (iter self)
+    let contains x self             = Iter.contains x (iter self)
+    let index ?equal x self         = Iter.index ?equal x (iter self)
+    let find_index predicate self   = Iter.find_index predicate (iter self)
+    let find_indices predicate self = Iter.find_indices predicate (iter self)
+    let indices ?equal x self       = Iter.indices ?equal x (iter self)
+    let count predicate self        = Iter.count predicate (iter self)
+    let sum self                    = Iter.sum (iter self)
+    let product self                = Iter.product (iter self)
+    let all predicate self          = Iter.all predicate (iter self)
+    let any predicate self          = Iter.any predicate (iter self)
   end
 end
 
@@ -351,21 +316,21 @@ module type Iterable0 = sig
   type t
   type item
 
-  val find: (item -> bool) -> t -> item option
+  val find : (item -> bool) -> t -> item option
   val find_index : (item -> bool) -> t ->  int option
   val find_indices : (item -> bool) -> t -> int list
+  val find_min : ?by:(item -> item -> order) -> t -> item option
+  val find_max : ?by:(item -> item -> order) -> t -> item option
   val index : ?equal:(item -> item -> bool) -> item -> t -> int option
   val indices : ?equal:(item -> item -> bool) -> item -> t -> int list
   val all : (item -> bool) -> t -> bool
   val any : (item -> bool) -> t -> bool
   val reduce : (item -> item -> item) -> t -> item option
-  val min : ?by:(item -> item -> order) -> t -> item option
-  val max : ?by:(item -> item -> order) -> t -> item option
-  val to_list : t -> item list
   val each : (item -> unit) -> t -> unit
   val contains : item -> t -> bool
   val count : (item -> bool) -> t -> int
   val fold_while : (item -> 'b -> [< `Continue of 'b | `Stop of 'b ]) -> 'b -> t -> 'b
+  val fold : (item -> 'r -> 'r) -> 'r -> t -> 'r
 end
 
 
@@ -376,122 +341,36 @@ module Iterable0 = struct
     type state
 
     val init : t -> state
-    val next : (item -> state -> 'r) -> 'r -> state -> t -> 'r
+    val next : t -> state -> (item -> state -> 'r) -> 'r -> 'r
   end
 
   module Make(B : Base) : Iterable0 with type t := B.t and type item := B.item = struct
-    let fold_state f r0 s0 self =
-      let rec go r s =
-        B.next (fun a -> go (f a r)) r s self in
-      go r0 s0
+    let iter self =
+      Iter {
+        init = B.init self;
+        next = (fun s -> B.next self s)
+      }
 
-    let fold f r self =
-      fold_state f r (B.init self) self
-
-    let fold_while f r0 self =
-      let rec go r s =
-        B.next (fun a s' ->
-            match f a r with
-            | `Continue r' -> go r' s'
-            | `Stop r' -> r')
-          r s self in
-      go r0 (B.init self)
-
-    let each f self =
-      let rec go s =
-        B.next (fun a s' -> f a) () s self in
-      go (B.init self)
-
-    let reduce f self =
-      B.next (fun r0 s0 -> Some (fold_state f r0 s0 self)) None (B.init self) self
-
-    let max ?by iter =
-      let cmp = by or Kernel.compare in
-      let max' x y =
-        match cmp x y with 1 -> x | _ -> y in
-      reduce max' iter
-
-    let min ?by iter =
-      let cmp = by or Kernel.compare in
-      let min' x y =
-        match cmp x y with -1 -> x | _ -> y in
-      reduce min' iter
-
-    let find predicate self =
-      let rec go s =
-        B.next
-          (fun a s' ->
-             if predicate a then Some a
-             else go s')
-          None s self in
-      go (B.init self)
-
-    let contains x self =
-      Option.is_some (find ((==) x) self)
-
-    let find_index predicate self =
-      let rec go i s =
-        B.next
-          (fun a s' ->
-             if predicate a then Some i
-             else go (i + 1) s')
-          None s self in
-      go 0 (B.init self)
-
-    let index ?equal x self =
-      let equal = equal or Kernel.equal in
-      find_index (equal x) self
-
-    let find_indices predicate self =
-      let rec go i r s =
-        B.next
-          (fun a s' ->
-             if predicate a then go (i + 1) (i :: r) s'
-             else go (i + 1) r s')
-          r s self in
-      Stdlib.List.rev (go 0 [] (B.init self))
-
-    let indices ?equal x self =
-      let equal = equal or Kernel.equal in
-      find_indices (equal x) self
-
-    let count predicate self =
-      let rec go n s =
-        B.next
-          (fun a s' ->
-             if predicate a then go (n + 1) s'
-             else go n s')
-          n s self in
-      go 0 (B.init self)
-
-    let all p self =
-      let rec go s =
-        B.next
-          (fun a s' ->
-             if p a then go s'
-             else false)
-          true s self in
-      go (B.init self)
-
-    let any p self =
-      let rec go s =
-        B.next
-          (fun a s' ->
-             if p a then go s'
-             else true)
-          false s self in
-      go (B.init self)
-
-    let to_list_reversed self =
-      fold (fun x xs -> x :: xs) [] self
-
-    let to_list self =
-      Stdlib.List.rev (to_list_reversed self)
+    let each f self                 = Iter.each f (iter self)
+    let fold f r self               = Iter.fold f r (iter self)
+    let fold_while f r self         = Iter.fold_while f r (iter self)
+    let reduce f self               = Iter.reduce f (iter self)
+    let find predicate self         = Iter.find predicate (iter self)
+    let find_max ?by self           = Iter.find_max ?by (iter self)
+    let find_min ?by self           = Iter.find_min ?by (iter self)
+    let contains x self             = Iter.contains x (iter self)
+    let index ?equal x self         = Iter.index ?equal x (iter self)
+    let find_index predicate self   = Iter.find_index predicate (iter self)
+    let find_indices predicate self = Iter.find_indices predicate (iter self)
+    let indices ?equal x self       = Iter.indices ?equal x (iter self)
+    let count predicate self        = Iter.count predicate (iter self)
+    let all predicate self          = Iter.all predicate (iter self)
+    let any predicate self          = Iter.any predicate (iter self)
   end
 end
 
 
-module Indexable = struct
+module Indexable1 = struct
   module type Base = sig
     type 'a t
 
@@ -499,9 +378,9 @@ module Indexable = struct
     val unsafe_get : int -> 'a t -> 'a
   end
 end
-(* contains_index? *)
 
-module type Container = sig
+
+module type Container1 = sig
   type 'a t
 
   val is_empty : 'a t -> bool
@@ -542,8 +421,8 @@ module type Container = sig
 end
 
 
-module Container = struct
-  module With_indexable(B : Indexable.Base) : Container with type 'a t := 'a B.t = struct
+module Container1 = struct
+  module With_indexable(B : Indexable1.Base) : Container1 with type 'a t := 'a B.t = struct
     let is_empty self =
       match B.length self with
       | 0 -> true
@@ -555,7 +434,7 @@ module Container = struct
       if i < B.length self then
         Some (B.unsafe_get i self)
       else
-        None
+      None
 
     let first self  = get 0 self
     let second self = get 1 self
@@ -564,38 +443,21 @@ module Container = struct
       get (length self - 1) self
   end
 
-  module With_iterable(B : Iterable.Base) : Container with type 'a t := 'a B.t = struct
-    let is_empty self =
-      B.next (fun _ _ -> false) true
-        (B.init self) self
+  module With_iterable(B : Iterable1.Base) : Container1 with type 'a t := 'a B.t = struct
+    let iter self =
+      Iter {
+        init = B.init self;
+        next = (fun s -> B.next self s)
+      }
 
-    let length self =
-      let rec go count s =
-        B.next (fun _ s' -> go (count + 1) s') count s self in
-      go 0 (B.init self)
-
-    let get n self =
-      let rec go i state =
-        B.next
-          (fun a state' ->
-             if Int.(i == n) then Some a
-             else go (i + 1) state')
-          None
-          state self in
-      go 0 (B.init self)
-
-    let first self  = get 0 self
-    let second self = get 1 self
-
-    let last self =
-      let rec go x s =
-        B.next (fun a s' -> go (Some a) s') x s self in
-      go None (B.init self)
+    let is_empty self = Iter.is_empty (iter self)
+    let length self   = Iter.length (iter self)
+    let get n self    = Iter.get n (iter self)
+    let first self    = Iter.first (iter self)
+    let second self   = Iter.second (iter self)
+    let last self     = Iter.last (iter self)
   end
 end
-
-
-
 
 
 module Indexable0 = struct
@@ -664,7 +526,7 @@ module Container0 = struct
       if i < B.length self then
         Some (B.unsafe_get i self)
       else
-        None
+      None
 
     let first self  = get 0 self
     let second self = get 1 self
@@ -673,33 +535,28 @@ module Container0 = struct
       get (length self - 1) self
   end
 
-  module With_iterable(B : Iterable.Base) : Container with type 'a t := 'a B.t = struct
-    let is_empty self =
-      B.next (fun _ _ -> false) true
-        (B.init self) self
+  module With_iterable(B : Iterable0.Base) : Container0 with type t := B.t = struct
+    type item = B.item
 
-    let length self =
-      let rec go count s =
-        B.next (fun _ s' -> go (count + 1) s') count s self in
-      go 0 (B.init self)
+    let iter self =
+      Iter {
+        init = B.init self;
+        next = (fun s -> B.next self s)
+      }
 
-    let get n self =
-      let rec go i state =
-        B.next
-          (fun a state' ->
-             if Int.(i == n) then Some a
-             else go (i + 1) state')
-          None
-          state self in
-      go 0 (B.init self)
-
-    let first self  = get 0 self
-    let second self = get 1 self
-
-    let last self =
-      let rec go x s =
-        B.next (fun a s' -> go (Some a) s') x s self in
-      go None (B.init self)
+    let is_empty self = Iter.is_empty (iter self)
+    let length self   = Iter.length (iter self)
+    let get n self    = Iter.get n (iter self)
+    let first self    = Iter.first (iter self)
+    let second self   = Iter.second (iter self)
+    let last self     = Iter.last (iter self)
   end
 end
+
+
+module type Iterable = Iterable1
+module Iterable = Iterable1
+module Indexable = Indexable1
+module type Container = Container1
+module Container = Container1
 

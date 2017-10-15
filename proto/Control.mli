@@ -264,8 +264,7 @@ module type Functor = sig
   (** The type that can be mapped over. *)
 
   val map : ('a -> 'b ) -> 'a t -> 'b t
-  val (<$>) : ('a -> 'b ) -> 'a t -> 'b t
-  val ( |>) : 'a t -> ('a -> 'b ) -> 'b t
+  val (<@>) : ('a -> 'b ) -> 'a t -> 'b t
 end
 
 
@@ -288,8 +287,7 @@ module type Functor2 = sig
   type ('a, 'x) t
 
   val map : ('a -> 'b) -> ('a, 'x) t -> ('b, 'x) t
-  val (<$>) : ('a -> 'b ) -> ('a, 'x) t -> ('b, 'x) t
-  val ( |>) : ('a, 'x) t -> ('a -> 'b ) -> ('b, 'x) t
+  val (<@>) : ('a -> 'b ) -> ('a, 'x) t -> ('b, 'x) t
 end
 
 
@@ -560,6 +558,53 @@ module IxMonad : sig
 
   val get : ('i, 'i, 'i) t
   val put : 'j -> (unit, 'i, 'j) t
+end
+
+
+(** A container type with the ability to fold on itself.
+
+    The [Foldable] interface describes the operations that sequentially iterate
+    over the elements in a parameterised unary type ['a t] and, starting with
+    an initial value [init], combine the elements togather, using a provided
+    function [f], into a single result. *)
+module type Foldable = sig
+  type 'a t
+
+  val foldl : ('a -> 'r -> 'r) -> 'r -> 'a t -> 'r
+  (** [foldl f init self] uses [f] to sequentially, from left to right, combine
+      the elements of the container [self] with an accumulator value [init].
+
+      {[
+        assert (Array.foldl (+) 0 [|1; 2; 3|] == 6);
+        assert (List.foldl List.add [] [1; 2; 3] == [3; 2; 1]);
+      ]} *)
+
+  val foldr : ('a -> 'r -> 'r) -> 'r -> 'a t -> 'r
+  (** [foldr f init self] is the same as [foldl] but performs the folding from
+      right to left.
+
+      {[
+        assert (Array.foldr (+) 0 [|1; 2; 3|] == 6);
+        assert (List.foldr List.add [] [1; 2; 3] == [1; 2; 3]);
+      ]} *)
+
+  val foldk : ('a -> 'r -> ('r -> 'r) -> 'r) -> 'r -> 'a t -> 'r
+  (** [foldk f init self] is the same as [foldl] but with early termination
+      support. The function [f] is given a continuation argument [('r -> 'r)]
+      that [f] can call to keep folding with an intermediate accumulator, or
+      return the accumulator to immediately stop without consuming more
+      elements.
+
+      {[
+        let count_until_0 =
+          List.foldk
+            (fun x count continue ->
+               if x == 0 then count
+               else continue (count + 1))
+            0
+            [5; 22; 10; 0; 4; 3; 14; 72; 92]
+        in assert (count_until_0 == 3);
+      ]} *)
 end
 
 

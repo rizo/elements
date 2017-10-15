@@ -59,24 +59,36 @@ module Iterable_list = Iterable.Make(struct
       | x :: xs -> f x xs
   end)
 
+
+type 'a iter =
+    Iter : {
+      init : 's;
+      next : 'r . 's -> ('a -> 's -> 'r) -> 'r -> 'r
+    } -> 'a iter
+
+
+let count_until_0 (Iter { init; next }) =
+  let rec go count state =
+    next state
+      (fun x state' ->
+         if x = 0 then count
+         else go (count + 1) state')
+      count in
+  go 0 init
+
+
 module Iterable' = struct
   module type Base = sig
     type 'a t
     type 'a state
 
     val init : 'a t -> 'a state
-    val next : 'a state -> ('a -> 'a state -> 'r) -> 'r -> 'r
+    val next : 'a t -> 'a state -> ('a -> 'a state -> 'r) -> 'r -> 'r
   end
 
   module Make(B : Base) = struct
     let count_until_0 input =
-      let rec go count state =
-        B.next state
-          (fun x state' ->
-             if x = 0 then count
-             else go (count + 1) state')
-          count in
-      go 0 (B.init input)
+      count_until_0 (Iter { init = B.init input; next = (fun s -> B.next input s) })
   end
 end
 
@@ -86,7 +98,7 @@ module Iterable_list' = Iterable'.Make(struct
 
     let init a = a
 
-    let next state f r =
+    let next self state f r =
       match state with
       | [] -> r
       | x :: xs -> f x xs
