@@ -20,9 +20,11 @@
             Dict
             Either
             List
+            Local
             Option
             Proto
             Result
+            Ref
             Set
             Stream
             String

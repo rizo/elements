@@ -557,7 +557,7 @@ val raises : ?only: exn -> (unit -> 'a) -> bool
 
     {[
       assert (raises (fun () -> fail "yes"));
-      assert (raises (fun () -> Option.force None) ~exn:No_value);
+      assert (raises (fun () -> Option.force None) ~only:No_value);
       assert (not (raises (fun () -> "no")))
     ]} *)
 
@@ -582,7 +582,7 @@ val undefined : unit -> 'a
       | x when x = 0 -> " "
       | x when x > 0 -> "+"
       | x when x < 0 -> "-"
-      | x            -> undefined ()
+      | _            -> undefined ()
     ]} *)
 
 
@@ -624,6 +624,15 @@ module Bool : sig
   val of_int : int -> bool
   val to_int : bool -> int
 
+  val to_option : 'a -> t -> 'a option
+  (** [to_option x self] is an optional value containing [x] if [self] is
+      [true] and [None] otherwise.
+
+      {[
+        assert (Bool.to_option 42 false == None);
+        assert (Bool.to_option 42 true  == Some 42);
+      ]} *)
+
   (** {6 Implemented instances} *)
   include Bounded    with type t := t
   include Comparable with type t := t
@@ -637,7 +646,6 @@ end
 
 val not : bool -> bool
 (** Global alias for {!Bool.not}. *)
-
 
 val ( && ) : bool -> bool -> bool
 (** Global alias for {!Bool.( && )}. *)
@@ -900,14 +908,16 @@ module Control : module type of Control
 module Exception = Control.Exception
 module Function = Control.Function
 
-(** {1:data Datatypes} *)
 
+(** {1:data Datatypes} *)
 module Data : sig
-  module Either : module type of Either
-  module Option : module type of Option
-  module Result : module type of Result
-  module List   : module type of List
   module Array  : module type of Array
+  module Either : module type of Either
+  module List   : module type of List
+  module Option : module type of Option
+  module Ref    : module type of Ref
+  module Result : module type of Result
+  module Set    : module type of Set
   module Stream : module type of Stream
   module String : module type of String
   module Tuple  : module type of Tuple
@@ -954,8 +964,8 @@ val is_some : 'a option -> bool
 val is_none : 'a option -> bool
 (** Global alias for {!Option.is_none}. *)
 
-val option : ('a -> 'b) -> (unit -> 'b) -> 'a option -> 'b
-(** Global alias for {!Option.option}. *)
+val option : (unit -> 'b) -> ('a -> 'b) -> 'a option -> 'b
+(** Global alias for {!Option.case}. *)
 
 val ( or ) : 'a option -> 'a -> 'a
 (** Global alias for {!Option.( or )}. *)
@@ -982,7 +992,7 @@ val is_error : ('a, 'e) result -> bool
 (** Global alias for {!Result.is_error}. *)
 
 val result : ('a -> 'b) -> ('e -> 'b) -> ('a, 'e) result -> 'b
-(** Global alias for {!Result.result}. *)
+(** Global alias for {!Result.case}. *)
 
 
 (* (** {6 Global either definitions} *) *)

@@ -1,4 +1,5 @@
 open Kernel
+open Collection
 
 type t = string
 type item = char
@@ -27,29 +28,34 @@ let inspect index f r self =
   else f (Stdlib.String.unsafe_get self index)
 
 
-module Indexable_base = struct
-  type t = string
-  type index = int
-  type item = char
+include Iterable0.With_Indexed(struct
+    type t = string
+    type index = int
+    type item = char
 
-  let length = length
-  let unsafe_get i self = Stdlib.String.unsafe_get self i
-end
+    let length = length
+    let unsafe_get i self = Stdlib.String.unsafe_get self i
+  end)
 
-include Collection.Container0.With_indexable(Indexable_base)
 
-module Iterable_base = struct
-  type t = string
-  type state = int
-  type item = char
+(* Collection instance *)
+include Collection0.Make(struct
+    type nonrec t = t
+    type nonrec item = item
+    type accumulator = Stdlib.Buffer.t
 
-  let init a = 0
+    (* This is probably a bad idea. A new buffer needs to be created each time. *)
+    let init = Buffer.create 16
 
-  let next self state f r =
-    if state = Stdlib.String.length self then r
-    else f (Stdlib.String.unsafe_get self state) (state + 1)
-end
-include Collection.Iterable0.Make(Iterable_base)
+    let reduce a acc = Buffer.add_char acc a; acc
+
+    let extract acc =
+      let s = Buffer.to_bytes acc in
+      (* FIXME: A new buffer should be produced. This is not thread-safe. *)
+      Buffer.reset acc;
+      s
+  end)
+
 
 (* Printable instance *)
 include Printable.Make(struct

@@ -18,14 +18,15 @@
     - Vector
 *)
 
+open Local
 open Kernel
 open Control
 
 
 type 'a iter =
   Iter : {
-    init : 's;
-    next : 'r . 's -> ('a -> 's -> 'r) -> 'r -> 'r
+    init : 'cursor;
+    next : 'r . ('a -> 'cursor -> 'r) -> 'r -> 'cursor -> 'r;
   } -> 'a iter
 
 
@@ -34,56 +35,56 @@ module Iter = struct
 
   let each f (Iter i) =
     let rec go s =
-      i.next s (fun a s' -> f a; go s') () in
+      i.next (fun a s' -> f a; go s') () s in
     go i.init
 
   let fold_state s0 f r0 next =
     let rec go r s =
-      next s (fun a -> go (f a r)) r in
+      next (fun a -> go (f a r)) r s in
     go r0 s0
 
   let fold f r (Iter i) =
     fold_state i.init f r i.next
 
   let reduce f (Iter i) =
-    i.next i.init
+    i.next
       (fun r0 s0 -> Some (fold_state s0 f r0 i.next))
-      None
+      None i.init
 
   let fold_while f r0 (Iter i) =
     let rec go s r =
-      i.next s
+      i.next
         (fun a s' ->
            match f a r with
            | `Continue r' -> go s' r'
            | `Stop r' -> r')
-        r in
+        r s in
     go i.init r0
 
   let find predicate (Iter i) =
     let rec go s =
-      i.next s
+      i.next
         (fun a s' ->
            if predicate a then Some a
            else go s')
-        None in
+        None s in
     go i.init
 
   let find_index predicate (Iter i) =
     let rec go n s =
-      i.next s
+      i.next
         (fun a s' ->
            if predicate a then Some n
            else go (n + 1) s')
-        None in
+        None s in
     go 0 i.init
 
   let find_indices predicate (Iter i) =
     let rec go n r s =
-      i.next s
+      i.next
         (fun a s' ->
            if predicate a then go (n + 1) (n :: r) s'
-           else go (n + 1) r s') r in
+           else go (n + 1) r s') r s in
     Stdlib.List.rev (go 0 [] i.init)
 
   let index ?equal x self =
@@ -109,11 +110,11 @@ module Iter = struct
 
   let count predicate (Iter i) =
     let rec go n s =
-      i.next s
+      i.next
         (fun a s' ->
            if predicate a then go (n + 1) s'
            else go n s')
-        n in
+        n s in
     go 0 i.init
 
   let sum self =
@@ -121,29 +122,29 @@ module Iter = struct
 
   let product (Iter i) =
     let rec go r s =
-      i.next s
+      i.next
         (fun a s' ->
            if a = 0 then 0
            else go (a * r) s')
-        r in
+        r s in
     go 1 i.init
 
   let all p (Iter i) =
     let rec go s =
-      i.next s
+      i.next
         (fun a s' ->
            if p a then go s'
            else false)
-        true in
+        true s in
     go i.init
 
   let any p (Iter i) =
     let rec go s =
-      i.next s
+      i.next
         (fun a s' ->
            if p a then go s'
            else true)
-        false in
+        false s in
     go i.init
 
   let to_list_reversed self =
@@ -153,18 +154,18 @@ module Iter = struct
     Stdlib.List.rev (to_list_reversed self)
 
   let is_empty (Iter i) =
-    i.next i.init (fun _a _s -> false) true
+    i.next (fun _a _s -> false) true i.init
 
   let length self =
     fold (fun _ n -> n + 1) 0 self
 
   let get n (Iter i) =
     let rec go idx s =
-      i.next s
+      i.next
         (fun a s' ->
            if idx = n then Some a
            else go (idx + 1) s')
-        None in
+        None s in
     go 0 i.init
 
   let first self  = get 0 self
@@ -182,6 +183,8 @@ end
  *  - Complexity: O(n) *)
 module type Iterable1 = sig
   type 'a t
+
+  val iter : 'a t -> 'a iter
 
   val each : ('a -> unit) -> 'a t -> unit
 
@@ -272,116 +275,6 @@ module type Iterable1 = sig
         assert (List.fold_while (fun a b -> if a <= 3 then Continue a + b
                                   else Stop b) 0 [1; 2; 3; 4] = 6);
       ]} *)
-end
-
-
-module Iterable1 = struct
-  module type Base = sig
-    type 'a t
-    type 'a state
-
-    val init : 'a t -> 'a state
-    val next : 'a t -> 'a state -> ('a -> 'a state -> 'r) -> 'r -> 'r
-  end
-
-  module Make(B : Base) : Iterable1 with type 'a t := 'a B.t = struct
-    let iter self =
-      Iter {
-        init = B.init self;
-        next = (fun s -> B.next self s)
-      }
-
-    let each f self                 = Iter.each f (iter self)
-    let fold f r self               = Iter.fold f r (iter self)
-    let fold_while f r self         = Iter.fold_while f r (iter self)
-    let reduce f self               = Iter.reduce f (iter self)
-    let find predicate self         = Iter.find predicate (iter self)
-    let find_max ?by self           = Iter.find_max ?by (iter self)
-    let find_min ?by self           = Iter.find_min ?by (iter self)
-    let contains x self             = Iter.contains x (iter self)
-    let index ?equal x self         = Iter.index ?equal x (iter self)
-    let find_index predicate self   = Iter.find_index predicate (iter self)
-    let find_indices predicate self = Iter.find_indices predicate (iter self)
-    let indices ?equal x self       = Iter.indices ?equal x (iter self)
-    let count predicate self        = Iter.count predicate (iter self)
-    let sum self                    = Iter.sum (iter self)
-    let product self                = Iter.product (iter self)
-    let all predicate self          = Iter.all predicate (iter self)
-    let any predicate self          = Iter.any predicate (iter self)
-  end
-end
-
-
-module type Iterable0 = sig
-  type t
-  type item
-
-  val find : (item -> bool) -> t -> item option
-  val find_index : (item -> bool) -> t ->  int option
-  val find_indices : (item -> bool) -> t -> int list
-  val find_min : ?by:(item -> item -> order) -> t -> item option
-  val find_max : ?by:(item -> item -> order) -> t -> item option
-  val index : ?equal:(item -> item -> bool) -> item -> t -> int option
-  val indices : ?equal:(item -> item -> bool) -> item -> t -> int list
-  val all : (item -> bool) -> t -> bool
-  val any : (item -> bool) -> t -> bool
-  val reduce : (item -> item -> item) -> t -> item option
-  val each : (item -> unit) -> t -> unit
-  val contains : item -> t -> bool
-  val count : (item -> bool) -> t -> int
-  val fold_while : (item -> 'b -> [< `Continue of 'b | `Stop of 'b ]) -> 'b -> t -> 'b
-  val fold : (item -> 'r -> 'r) -> 'r -> t -> 'r
-end
-
-
-module Iterable0 = struct
-  module type Base = sig
-    type t
-    type item
-    type state
-
-    val init : t -> state
-    val next : t -> state -> (item -> state -> 'r) -> 'r -> 'r
-  end
-
-  module Make(B : Base) : Iterable0 with type t := B.t and type item := B.item = struct
-    let iter self =
-      Iter {
-        init = B.init self;
-        next = (fun s -> B.next self s)
-      }
-
-    let each f self                 = Iter.each f (iter self)
-    let fold f r self               = Iter.fold f r (iter self)
-    let fold_while f r self         = Iter.fold_while f r (iter self)
-    let reduce f self               = Iter.reduce f (iter self)
-    let find predicate self         = Iter.find predicate (iter self)
-    let find_max ?by self           = Iter.find_max ?by (iter self)
-    let find_min ?by self           = Iter.find_min ?by (iter self)
-    let contains x self             = Iter.contains x (iter self)
-    let index ?equal x self         = Iter.index ?equal x (iter self)
-    let find_index predicate self   = Iter.find_index predicate (iter self)
-    let find_indices predicate self = Iter.find_indices predicate (iter self)
-    let indices ?equal x self       = Iter.indices ?equal x (iter self)
-    let count predicate self        = Iter.count predicate (iter self)
-    let all predicate self          = Iter.all predicate (iter self)
-    let any predicate self          = Iter.any predicate (iter self)
-  end
-end
-
-
-module Indexable1 = struct
-  module type Base = sig
-    type 'a t
-
-    val length : 'a t -> int
-    val unsafe_get : int -> 'a t -> 'a
-  end
-end
-
-
-module type Container1 = sig
-  type 'a t
 
   val is_empty : 'a t -> bool
   (** [is_empty self] is [true] if [self] contains no elements.
@@ -421,8 +314,68 @@ module type Container1 = sig
 end
 
 
-module Container1 = struct
-  module With_indexable(B : Indexable1.Base) : Container1 with type 'a t := 'a B.t = struct
+module Iterable1 = struct
+  module type Basic = sig
+    type 'a t
+    type 'a cursor
+
+    val init : 'a t -> 'a cursor
+    val next : 'a t -> ('a -> 'a cursor -> 'r) -> 'r -> 'a cursor -> 'r
+  end
+
+  module type Indexed = sig
+    type 'a t
+
+    val length : 'a t -> int
+    val unsafe_get : int -> 'a t -> 'a
+  end
+
+  module Make(B : Basic) : Iterable1 with type 'a t := 'a B.t = struct
+    let iter self =
+      Iter {
+        init = B.init self;
+        next = (fun f -> B.next self f);
+      }
+
+    let each f self                 = Iter.each f (iter self)
+    let fold f r self               = Iter.fold f r (iter self)
+    let fold_while f r self         = Iter.fold_while f r (iter self)
+    let reduce f self               = Iter.reduce f (iter self)
+    let find predicate self         = Iter.find predicate (iter self)
+    let find_max ?by self           = Iter.find_max ?by (iter self)
+    let find_min ?by self           = Iter.find_min ?by (iter self)
+    let contains x self             = Iter.contains x (iter self)
+    let index ?equal x self         = Iter.index ?equal x (iter self)
+    let find_index predicate self   = Iter.find_index predicate (iter self)
+    let find_indices predicate self = Iter.find_indices predicate (iter self)
+    let indices ?equal x self       = Iter.indices ?equal x (iter self)
+    let count predicate self        = Iter.count predicate (iter self)
+    let sum self                    = Iter.sum (iter self)
+    let product self                = Iter.product (iter self)
+    let all predicate self          = Iter.all predicate (iter self)
+    let any predicate self          = Iter.any predicate (iter self)
+
+    (* Container functions, indexed iterables override these. *)
+    let is_empty self = Iter.is_empty (iter self)
+    let length self   = Iter.length (iter self)
+    let get n self    = Iter.get n (iter self)
+    let first self    = Iter.first (iter self)
+    let second self   = Iter.second (iter self)
+    let last self     = Iter.last (iter self)
+  end
+
+  module With_Indexed (B : Indexed) : Iterable1 with type 'a t := 'a B.t = struct
+    include Make(struct
+        type 'a t = 'a B.t
+        type 'a cursor = int
+
+        let init self = 0
+        let next self f r cursor =
+          if cursor = B.length self then r
+          else f (B.unsafe_get cursor self) (cursor + 1)
+      end)
+
+    (* Container functions, overrides iterable definition. *)
     let is_empty self =
       match B.length self with
       | 0 -> true
@@ -442,79 +395,100 @@ module Container1 = struct
     let last self =
       get (length self - 1) self
   end
-
-  module With_iterable(B : Iterable1.Base) : Container1 with type 'a t := 'a B.t = struct
-    let iter self =
-      Iter {
-        init = B.init self;
-        next = (fun s -> B.next self s)
-      }
-
-    let is_empty self = Iter.is_empty (iter self)
-    let length self   = Iter.length (iter self)
-    let get n self    = Iter.get n (iter self)
-    let first self    = Iter.first (iter self)
-    let second self   = Iter.second (iter self)
-    let last self     = Iter.last (iter self)
-  end
 end
 
 
-module Indexable0 = struct
-  module type Base = sig
+module type Iterable0 = sig
+  type t
+  type item
+
+  val iter : t -> item iter
+  val find : (item -> bool) -> t -> item option
+  val find_index : (item -> bool) -> t ->  int option
+  val find_indices : (item -> bool) -> t -> int list
+  val find_min : ?by:(item -> item -> order) -> t -> item option
+  val find_max : ?by:(item -> item -> order) -> t -> item option
+  val index : ?equal:(item -> item -> bool) -> item -> t -> int option
+  val indices : ?equal:(item -> item -> bool) -> item -> t -> int list
+  val all : (item -> bool) -> t -> bool
+  val any : (item -> bool) -> t -> bool
+  val reduce : (item -> item -> item) -> t -> item option
+  val each : (item -> unit) -> t -> unit
+  val contains : item -> t -> bool
+  val count : (item -> bool) -> t -> int
+  val fold_while : (item -> 'b -> [< `Continue of 'b | `Stop of 'b ]) -> 'b -> t -> 'b
+  val fold : (item -> 'r -> 'r) -> 'r -> t -> 'r
+
+  val is_empty : t -> bool
+  val length : t -> int
+  val get : int -> t -> item option
+  val first : t -> item option
+  val second : t -> item option
+  val last : t -> item option
+end
+
+
+module Iterable0 = struct
+  module type Basic = sig
+    type t
+    type item
+    type cursor
+
+    val init : t -> cursor
+    val next : t -> (item -> cursor -> 'r) -> 'r -> cursor -> 'r
+  end
+
+  module type Indexed = sig
     type t
     type item
 
     val length : t -> int
     val unsafe_get : int -> t -> item
   end
-end
 
+  module Make(B : Basic) : Iterable0 with type t := B.t and type item := B.item = struct
+    let iter self =
+      Iter { init = B.init self;
+             next = (fun f -> B.next self f) }
 
-module type Container0 = sig
-  type t
-  type item
+    let each f self                 = Iter.each f (iter self)
+    let fold f r self               = Iter.fold f r (iter self)
+    let fold_while f r self         = Iter.fold_while f r (iter self)
+    let reduce f self               = Iter.reduce f (iter self)
+    let find predicate self         = Iter.find predicate (iter self)
+    let find_max ?by self           = Iter.find_max ?by (iter self)
+    let find_min ?by self           = Iter.find_min ?by (iter self)
+    let contains x self             = Iter.contains x (iter self)
+    let index ?equal x self         = Iter.index ?equal x (iter self)
+    let find_index predicate self   = Iter.find_index predicate (iter self)
+    let find_indices predicate self = Iter.find_indices predicate (iter self)
+    let indices ?equal x self       = Iter.indices ?equal x (iter self)
+    let count predicate self        = Iter.count predicate (iter self)
+    let all predicate self          = Iter.all predicate (iter self)
+    let any predicate self          = Iter.any predicate (iter self)
 
-  val is_empty : t -> bool
-  (** [is_empty self] is [true] if [self] contains no elements.
+    (* Container functions, indexed iterables override these. *)
+    let is_empty self = Iter.is_empty (iter self)
+    let length self   = Iter.length (iter self)
+    let get n self    = Iter.get n (iter self)
+    let first self    = Iter.first (iter self)
+    let second self   = Iter.second (iter self)
+    let last self     = Iter.last (iter self)
+  end
 
-      {[
-        assert (List.is_empty [] == true);
-        assert (String.is_empty "abc" == false);
-      ]} *)
+  module With_Indexed (B : Indexed) : Iterable0 with type t := B.t and type item := B.item = struct
+    include Make(struct
+        type t = B.t
+        type item = B.item
+        type cursor = int
 
-  val length : t -> int
-  (** [length self] counts the number of items in the list. *)
+        let init self = 0
+        let next self f r cursor =
+          if cursor = B.length self then r
+          else f (B.unsafe_get cursor self) (cursor + 1)
+      end)
 
-  val get : int -> t -> item option
-  (** [get n self] gets the [n]th element from [self] or None if [n] exceeds
-      the length of [self].
-
-      {b Note:} Negative indices are interpreted counting from the end of the
-      collection.
-
-      {[
-        assert (get 1 [] = None);
-        assert (get 1 ["a"; "b"; "c"] = Some "b");
-        assert (get (-1) ["a"; "b"; "c"] = "c");
-      ]} *)
-
-  val first : t -> item option
-
-  val second : t -> item option
-
-  val last : t -> item option
-  (** [head self] is the first item of [self] or [None] if [self] is empty.
-
-      {[
-        assert (List.head [1; 2; 3] = Some 1);
-        assert (List.head [] = None);
-      ]} *)
-end
-
-
-module Container0 = struct
-  module With_indexable(B : Indexable0.Base) : Container0 with type t := B.t and type item := B.item = struct
+    (* Container functions, overrides iterable definition. *)
     let is_empty self =
       match B.length self with
       | 0 -> true
@@ -534,29 +508,158 @@ module Container0 = struct
     let last self =
       get (length self - 1) self
   end
+end
 
-  module With_iterable(B : Iterable0.Base) : Container0 with type t := B.t = struct
-    type item = B.item
 
-    let iter self =
-      Iter {
-        init = B.init self;
-        next = (fun s -> B.next self s)
-      }
+(** An interface for types that can be constructed by reducing elements.
 
-    let is_empty self = Iter.is_empty (iter self)
-    let length self   = Iter.length (iter self)
-    let get n self    = Iter.get n (iter self)
-    let first self    = Iter.first (iter self)
-    let second self   = Iter.second (iter self)
-    let last self     = Iter.last (iter self)
+    A {e reducible} provides an [init]ial accumulator value, a [reduce]
+    function and an [extract] function. This way a reducible defines
+    an implementation of a {e fold} that can produce a container type ['a t]. *)
+module type Reducible = sig
+  type 'a t
+  type 'a accumulator
+
+  val init : 'a accumulator
+  val reduce : 'a -> 'a accumulator -> 'a accumulator
+  val extract : 'a accumulator -> 'a t
+end
+
+
+module type Collection = sig
+  type 'a t
+
+  val make : int -> (int -> 'a) -> 'a t
+  val singleton : 'a -> 'a t
+  val replicate : int -> 'a -> 'a t
+  val collect : 'a iter -> 'a t
+end
+
+
+module Collection = struct
+  module Make(B : Reducible) : Collection with type 'a t := 'a B.t = struct
+    open B
+
+    let unfold f seed =
+      let rec loop s acc =
+        f (fun a s' -> loop s' (reduce a acc)) acc s in
+      extract (loop seed init)
+
+    let make n f =
+      let step k r count =
+        if count <= 0 then r
+        else k (f count) (count - 1) in
+      unfold step n
+
+    let replicate n x = make n (always x)
+
+    let singleton x = replicate 1 x
+
+    let collect (Iter i) =
+      unfold i.next i.init
   end
 end
 
 
+module type Reducible0 = sig
+  type t
+  type item
+  type accumulator
+
+  val init : accumulator
+  val reduce : item -> accumulator -> accumulator
+  val extract : accumulator -> t
+end
+
+
+module type Collection0 = sig
+  type t
+  type item
+
+  val make : int -> (int -> item) -> t
+  val singleton : item -> t
+  val replicate : int -> item -> t
+  val collect : item iter -> t
+end
+
+
+module Collection0 = struct
+  module Make(B : Reducible0) : Collection0 with type t := B.t and type item := B.item = struct
+    type item = B.item
+    open B
+
+    let unfold f seed =
+      let rec loop s acc =
+        f (fun a s' -> loop s' (reduce a acc)) acc s in
+      extract (loop seed init)
+
+    let make n f =
+      let step k r count =
+        if count <= 0 then r
+        else k (f count) (count - 1) in
+      unfold step n
+
+    let replicate n x = make n (always x)
+
+    let singleton x = replicate 1 x
+
+    let collect (Iter i) =
+      unfold i.next i.init
+  end
+end
+
+
+type ('a, 'b) fold =
+  Fold : {
+    init : 'accumulator;
+    reduce : 'a -> 'accumulator -> 'accumulator;
+    extract : 'accumulator -> 'b;
+  } -> ('a, 'b) fold
+
+
+module Fold = struct
+  type ('a, 'b) t = ('a, 'b) fold
+
+  let pure b =
+    Fold { init = ();
+           reduce = (fun () _ -> ());
+           extract = (fun () -> b) }
+
+  let (<$>) f (Fold { init; reduce; extract }) =
+    Fold { init; reduce; extract = f << extract }
+
+  let (<*>) (Fold l) (Fold r) =
+    let init = (l.init, r.init) in
+    let reduce a (ls, rs) = (l.reduce a ls, r.reduce a rs) in
+    let extract (ls, rs) = l.extract ls (r.extract rs) in
+    Fold { init; reduce; extract }
+
+  let sum =
+    Fold { init = 0;
+           reduce = (+);
+           extract = identity }
+
+  let length =
+    Fold { init = 0;
+           reduce = (fun a n -> n + 1);
+           extract = identity }
+
+  let average = (/) <$> sum <*> length
+
+  let list =
+    Fold { init = identity;
+           reduce = (fun a s -> s << Stdlib.List.cons a);
+           extract = (fun f -> f []) }
+end
+
+
+let fold (Fold f) (Iter i) =
+  let rec go r s =
+    i.next (fun a s' -> go (f.reduce a r) s') r s in
+  f.extract (go f.init i.init)
+
+
+(* Public Defaults *)
 module type Iterable = Iterable1
 module Iterable = Iterable1
-module Indexable = Indexable1
-module type Container = Container1
-module Container = Container1
 

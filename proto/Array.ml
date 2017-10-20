@@ -1,5 +1,6 @@
 open Kernel
 open Control
+open Collection
 
 type 'a t = 'a array
 
@@ -25,8 +26,8 @@ include Functor.Make(struct
   end)
 
 
-(* Container instance *)
-include Collection.Container.With_indexable(struct
+(* Iterable instance *)
+include Iterable.With_Indexed(struct
     type nonrec 'a t = 'a t
     type index = int
 
@@ -35,16 +36,28 @@ include Collection.Container.With_indexable(struct
   end)
 
 
-(* Iterable instance *)
-include Collection.Iterable.Make(struct
-    type 'a t = 'a array
-    type 'a state = int
+(* Collection instance *)
+include Collection.Make(struct
+    type nonrec 'a t = 'a t
+    type 'a accumulator = 'a list * int
 
-    let init a = 0
+    let init = ([], 0)
 
-    let next self state f r =
-      if state = length self then r
-      else f (Stdlib.Array.unsafe_get self state) (state + 1)
+    let reduce a (acc, len) = (a :: acc, len + 1)
+
+    let extract (acc, len) =
+      match acc with
+      | [] -> [||]
+      | x :: l ->
+        let a = Stdlib.Array.make len x in
+        let rec loop i l =
+          match l with
+          | [] -> assert (i = -1)
+          | x :: l ->
+              Stdlib.Array.set a i x;
+              loop (i - 1) l in
+        loop (len - 2) l;
+        a
   end)
 
 
@@ -54,6 +67,8 @@ let uncheked_get i self =
   Stdlib.Array.unsafe_get self i
 
 let length = Stdlib.Array.length
+
+let of_list = Stdlib.Array.of_list
 
 let foldk f init self =
   let n = length self in

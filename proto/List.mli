@@ -64,7 +64,7 @@ end
 (** {6 Implemented instances} *)
 include Functor     with type 'a t := 'a t
 include Iterable    with type 'a t := 'a t
-include Container   with type 'a t := 'a t
+include Collection  with type 'a t := 'a t
 include Monoid      with type 'a t := 'a t
 include Default1    with type 'a t := 'a t
 include Comparable1 with type 'a t := 'a t

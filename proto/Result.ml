@@ -44,7 +44,7 @@ let or_fail message self =
   | Ok x    -> x
   | Error _ -> fail message
 
-let result f default self =
+let case f default self =
   match self with
   | Ok x    -> f x
   | Error e -> default e

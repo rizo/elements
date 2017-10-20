@@ -233,6 +233,9 @@ end
  - Sliceable
  - String.join : string -> string t -> string
  - A collection is [Indexed] xor [Sequential]
+- val Base.Set.sum (module Base__.Commutative_group.S with type t = 'sum) -> ('a, 'b) t -> f:('a -> 'sum) -> 'sum
+    [sum t] returns the sum of [f t] for each [t] in the set.
+    [O(n)].
  *)
 
 module type Collection = sig
@@ -409,6 +412,8 @@ module type Collection = sig
   val group : 'a t -> 'a list t
 
   val group_by : ('a -> 'a -> bool) -> 'a t -> 'a list t
+  (*   if [equiv] is an equivalence predicate, then [group_by set ~equiv] produces a list *)
+  (* of equivalence classes (i.e., a set-theoretic quotient).  E.g., *)
 
   (* Should this take [?equal b b]? *)
   val group_on : ('a -> 'b) -> 'a t -> 'a list t
@@ -454,7 +459,6 @@ module type Collection = sig
   val partition : ('a -> bool) -> 'a t -> 'a t * 'a t
 
   val powerset : 'a t -> 'a t t
-
 
   val reject : ('a -> bool) -> 'a t -> 'a t
 
@@ -520,5 +524,106 @@ module type Collection = sig
   (* include Monoid      with type 'a t := 'a t *)
   include Ordered     with type 'a t := 'a t
   include Sortable    with type 'a t := 'a t
+end
+
+
+(* -- // -- *)
+
+type ('a, 'x, 'b) fold =
+  { step : ('x -> 'a -> 'x);
+    init : 'x;
+    stop : ('x -> 'b) }
+
+let reverse_list : ('a, 'a list, 'a list) fold =
+  { step = (fun x a -> a::x);
+    init = [];
+    stop = identity }
+
+
+
+(* Apply a strict left 'Fold' to a 'Foldable' container *)
+(* fold :: Foldable f => Fold a b -> f a -> b *)
+let fold ({ step; init; stop }) (foldl, input) =
+  let cons a k x = k (step x a) in
+  foldl cons stop input init
+
+type ('a, 'b) transducer =
+  Transducer : {
+    init : 's;
+    step : 'r . 's -> ('a -> 's -> 'r) -> 'r -> 'r;
+    stop : 'r . 'r -> 'b;
+  } -> ('a, 'b) transducer
+
+
+
+(* let into (Transducer t) empty = *)
+(*   t.step t.init (fun x -> x) empty *)
+
+
+module type Collectable = sig
+  type 'a t
+
+  val empty : 'a t
+  val add : 'a -> 'a t -> 'a t
+end
+
+(* collector_fun = fn *)
+(*       set, {:cont, elem} -> MapSet.put(set, elem) *)
+(*       set, :done -> set *)
+(*       _set, :halt -> :ok *)
+(* end *)
+
+module type Into = sig
+  type 'a t
+
+end
+
+(* -- // -- *)
+
+module Poly_find = struct
+  module List = struct
+    include List
+
+    let find what self =
+      match what with
+      | `first -> List.first self
+      | `where predicate -> List.find predicate self
+
+  end
+
+  let l1 = [1; 2; 3; 4; 5; 5]
+  let l2 = List.make 10 Int.to_string
+
+  let () = begin
+    assert (List.find `first l1 = Some 1);
+    assert (List.find (`where (fun x -> x mod 2 == 0)) l1 = Some 2);
+  end
+end
+
+
+(* -- // -- *)
+
+
+module type S = sig
+  type 'a t
+
+  val sum : (module Monoid0 with type t = 'r) -> ('a -> 'r) -> 'a t -> 'r
+end
+
+(* -- // -- *)
+
+type 'a iter =
+  Iter : {
+    init : 's;
+    step : 'r . ('a -> 's -> 'r) -> 'r -> 's -> 'r;
+  } -> 'a iter
+
+
+
+(* -- // -- *)
+
+module type Copyable = sig
+  type 'a t
+  val copy : 'a t -> 'a t
 end
 

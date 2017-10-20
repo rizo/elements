@@ -12,31 +12,31 @@ type 'a t = 'a option
 exception No_value
 (** Exception raised when forcing a [None] option value. *)
 
-val some : 'a -> 'a option
+val some : 'a -> 'a t
 (** [some x] wraps [x] in a [Some] option value. *)
 
-val none : 'a option
+val none : 'a t
 (** [none] is the [None] option value. *)
 
-val is_some : 'a option -> bool
+val is_some : 'a t -> bool
 (** [is_some opt] is [true] if the option is a [Some] value. *)
 
-val is_none : 'a option -> bool
+val is_none : 'a t -> bool
 (** [is_none opt] is [true] if the option is a [None] value. *)
 
-val option : ('a -> 'b) -> (unit -> 'b) -> 'a option -> 'b
-(** [option f default opt] is [f] called withe the [Some] value of [opt],
-    or [default ()] if [opt] is [None].
+val case : (unit -> 'b) -> ('a -> 'b) -> 'a t -> 'b
+(** [case default f self] is [f] applied to the [Some] value of [self],
+    or [default ()] if [self] is [None].
 
     {[
-      assert (None    |> option (fun () -> 0) ((+) 1) = 0);
-      assert (Some 42 |> option (fun () -> 0) ((+) 1) = 43);
+      assert (None    |> Option.case (fun () -> 0) ((+) 1) = 0);
+      assert (Some 42 |> Option.case (fun () -> 0) ((+) 1) = 43);
     ]} *)
 
 val is_empty : 'a t -> bool
 (** [is_empty opt] is [true] if the option is [None] and [false] otherwise. *)
 
-val ( or ) : 'a option -> 'a -> 'a
+val ( or ) : 'a t -> 'a -> 'a
 (** [opt or x] is the flipped infix version of [with_default] equivalent to
     [with_default (fun () -> x) opt].
 
@@ -52,7 +52,7 @@ val ( or ) : 'a option -> 'a -> 'a
     Note: [or] has a very low precedence, expressions have to be grouped to
     delimit the scope. *)
 
-val or_else : (unit -> 'a) -> 'a option -> 'a
+val or_else : (unit -> 'a) -> 'a t -> 'a
 (** [or_else f opt] extracts the optional value. If the optional is
     [None], the default value [f ()] is returned. A thunk is used instead of
     a direct value to avoid the default value evaluation when the option is
@@ -67,7 +67,7 @@ val or_else : (unit -> 'a) -> 'a option -> 'a
       assert (Some "Bob" |> Option.with_default read_line = "Bob");
     ]} *)
 
-val or_fail : string -> 'a option -> 'a
+val or_fail : string -> 'a t -> 'a
 (** [or_fail message opt] forces the extraction of the optional value and
     {!fail}s if [self] does not contain a value.
 
@@ -77,7 +77,7 @@ val or_fail : string -> 'a option -> 'a
       assert (List.head [1; 2; 3] |> Option.or_fail "empty list" = 1);
     ]} *)
 
-val ( <@> ) : 'a option -> ('a -> 'b) -> 'b option
+val ( <@> ) : 'a t -> ('a -> 'b) -> 'b t
 (** [f <@> self] will apply [f] to the value wrapped by [self], returning an
     option with the resulting value, or [None] if [self] does not not have any
     value. This operator is an infix version of [map].
@@ -89,7 +89,7 @@ val ( <@> ) : 'a option -> ('a -> 'b) -> 'b option
       assert (Int.to_string <@> None == None);
     ]} *)
 
-val force : 'a option -> 'a
+val force : 'a t -> 'a
 (** [force opt] forces the extraction the optional value.
 
     @raise No_value if [opt] is [None].
@@ -99,7 +99,7 @@ val force : 'a option -> 'a
       assert (raises (Option.force (List.head [])))
     ]} *)
 
-val catch : (unit -> 'a) -> 'a option
+val catch : (unit -> 'a) -> 'a t
 (** [catch f] wraps the call to [f], returning [None] if it raises an
     exception or the result as a [Some] value otherwise.
 
@@ -107,14 +107,31 @@ val catch : (unit -> 'a) -> 'a option
       Option.catch read_line or "nothing"
     ]} *)
 
-val each : ('a -> unit) -> 'a option -> unit
-(** [each f self] apply an effectful function [f] to the value wrapped in
-    [self] or do nothing if [self] contains no value.
+val apply : ('a -> unit) -> 'a t -> unit
+(** [apply f self] applies an effectful function [f] to the value wrapped in
+    [self] or does nothing if [self] contains no value.
 
     {[
-      Option.each print (Some "hey");
-      Option.each print None
+      Option.apply print (Some "hey");
+      Option.apply print None
     ]} *)
+
+val to_bool : 'a t -> bool
+(** [to_bool self] is an alis for {!is_some}.
+
+    {[
+      assert (Option.to_bool (Some 42) == true);
+      assert (Option.to_bool None == false);
+    ]} *)
+
+val to_list : 'a t -> 'a list
+(** [to_list self] is a singleton list with the value wrapped by [self] or an empty list if [self] is [None].
+
+  {[
+    assert (Option.to_bool (Some 42) == true);
+    assert (Option.to_bool None == false);
+  ]} *)
+
 
 (** {6 Implemented instances} *)
 include Comparable1 with type 'a t := 'a t

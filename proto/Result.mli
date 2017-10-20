@@ -93,8 +93,8 @@ val catch : (unit -> 'a) -> ('a, exn) result
       | Error e -> print (format "I saved you from %s!" (Exn.show e))
     ]} *)
 
-val result : ('a -> 'b) -> ('e -> 'b) -> ('a, 'e) result -> 'b
-(** [result f default res] is the application of f to the [Ok] value of [res],
+val case : ('a -> 'b) -> ('e -> 'b) -> ('a, 'e) result -> 'b
+(** [case f default res] is the application of f to the [Ok] value of [res],
     or to [default e] value if the [res] is [Error e]. *)
 
 val to_option : ('a, 'e) result -> 'a option

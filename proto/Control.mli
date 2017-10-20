@@ -250,7 +250,7 @@ module Monad2 : sig
 end
 
 
-(** Signature for the polymorphic unary functor types.
+(** Interface for polymorphic unary functor types.
 
     A type is a [Functor] if it provides some context or structure for values
     of type ['a] and allows the values to be mapped over and transformed into
@@ -263,8 +263,8 @@ module type Functor = sig
   type 'a t
   (** The type that can be mapped over. *)
 
-  val map : ('a -> 'b ) -> 'a t -> 'b t
-  val (<@>) : ('a -> 'b ) -> 'a t -> 'b t
+  val map : ('a -> 'b) -> 'a t -> 'b t
+  val (<@>) : ('a -> 'b) -> 'a t -> 'b t
 end
 
 
@@ -283,6 +283,30 @@ module Functor : sig
 end
 
 
+(** Interface for monomorphic functor types. *)
+module type Functor0 = sig
+  type t
+  (** The type that can be mapped over. *)
+
+  type item
+
+  val map : (item -> item) -> t -> t
+  val (<@>) : (item -> item) -> t -> t
+end
+
+module Functor0 : sig
+  module type Base = sig
+    type t
+    type item
+
+    val map : (item -> item) -> t -> t
+  end
+
+  module Make(B : Base) : Functor0 with type t := B.t
+end
+
+
+(** Interface for polymorphic binary functor types. *)
 module type Functor2 = sig
   type ('a, 'x) t
 

@@ -22,9 +22,6 @@ let raises ?only:exn f =
       | None -> true
     end
 
-let show self =
-  Stdlib.Printexc.to_string self
-
 let fail = P.failwith
 
 exception Undefined
@@ -445,6 +442,11 @@ module Bool = struct
 
   let to_int = function false -> 0 | true -> 1
   let of_int = function 0 -> false | _ -> true
+
+  let to_option default self =
+    match self with
+    | true -> Some default
+    | false -> None
 
   (* Bounded *)
   let min_value = false

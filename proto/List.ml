@@ -6,6 +6,14 @@ open Collection
 type 'a t = 'a list
 
 
+let unfold f init =
+  let rec loop s r =
+    match f s with
+    | None -> r
+    | Some (a, s') -> loop s' (a :: r) in
+  loop init []
+
+
 (* Monoid instance *)
 include Monoid.Make(struct
     type nonrec 'a t = 'a t
@@ -77,20 +85,29 @@ include Functor.Make(struct
   end)
 
 
-(* Iterable & Container instance *)
-module Basic_iterable = struct
-  type nonrec 'a t = 'a t
-  type 'a state = 'a t
+(* Iterable instance *)
+include Iterable.Make(struct
+    type nonrec 'a t = 'a t
+    type 'a cursor = 'a t
 
-  let init self = self
+    let init self = self
 
-  let next self s f r =
-    match s with
-    | [] -> r
-    | a :: s' -> f a s'
-end
-include Iterable.Make(Basic_iterable)
-include Container.With_iterable(Basic_iterable)
+    let next self f r cursor =
+      match cursor with
+      | [] -> r
+      | a :: s' -> f a s'
+  end)
+
+
+(* Collection instance *)
+include Collection.Make(struct
+    type nonrec 'a t = 'a t
+    type 'a accumulator = 'a t
+
+    let init = []
+    let reduce a acc = a :: acc
+    let extract acc = Stdlib.List.rev acc
+  end)
 
 
 (* FIXME: -n *)
@@ -125,6 +142,12 @@ let tail self =
   match self with
   | [] -> None
   | _ :: xs -> Some xs
+
+
+let filter predicate =
+  let rec go acc =
+    inspect (fun a -> go (if predicate a then add a acc else acc)) acc in
+  go empty
 
 
 (* {e Complexity:} O(2n), if [n] is negative. *)

@@ -1,4 +1,4 @@
-module Stdlib = Proto_shadow_stdlib
+open Local
 
 let cons x xs = x :: xs
 
@@ -213,6 +213,31 @@ module Monad2 = struct
 
     let sequence_unit mas =
       sequence mas >>= fun _ -> B.return ()
+  end
+end
+
+
+module type Functor0 = sig
+  type t
+  type item
+
+  val map : (item -> item) -> t -> t
+  val (<@>) : (item -> item) -> t -> t
+end
+
+
+module Functor0 = struct
+  module type Base = sig
+    type t
+    type item
+
+    val map : (item -> item) -> t -> t
+  end
+
+  module Make(B : Base) : (Functor0 with type t := B.t) = struct
+    include B
+
+    let ( <@> ) f m = map f m
   end
 end
 
