@@ -43,7 +43,7 @@ let rec map f s =
 let rec filter f s =
   match next s with
   | Some (x, s') when f x -> yield x ++ fun () -> filter f s'
-  | Some (x, s')          -> filter f s'
+  | Some (_, s')          -> filter f s'
   | None                  -> empty
 
 let fold f init s =

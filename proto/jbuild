@@ -9,10 +9,30 @@
   (modules (Kernel))))
 
 (library
+ ((name Iter)
+  (public_name proto.iter)
+  (wrapped true)
+  (ocamlopt_flags (:standard -O3))
+  (modules (Iter))))
+
+;(library
+; ((name Proto)
+;  (public_name proto)
+;  (wrapped true)
+;  (libraries (proto.kernel proto.iter proto.shadow-stdlib))
+;  (ocamlopt_flags (:standard -O3))
+;  (modules (Proto
+;            Proto_Data
+;            Proto_Debug
+;            Proto_Control
+;            Proto_Network
+;            Proto_System))))
+
+(library
  ((name Proto)
   (public_name proto)
   (wrapped true)
-  (libraries (proto.kernel proto.shadow-stdlib))
+  (libraries (proto.kernel proto.iter proto.shadow-stdlib))
   (ocamlopt_flags (:standard -O3))
   (modules (Array
             Control
@@ -21,12 +41,14 @@
             Either
             List
             Local
+            Fold
             Option
             Proto
             Result
             Ref
             Set
             Stream
+            System
             String
             Tuple
             Void))))

@@ -1,6 +1,7 @@
 open Kernel
 open Control
 open Collection
+open Local
 
 type 'a t = 'a array
 
@@ -37,11 +38,12 @@ include Iterable.With_Indexed(struct
 
 
 (* Collection instance *)
-include Collection.Make(struct
+include Collectable1.Make(struct
     type nonrec 'a t = 'a t
     type 'a accumulator = 'a list * int
 
-    let init = ([], 0)
+    let empty = [||]
+    let accumulator self = (Stdlib.Array.to_list self, 0)
 
     let reduce a (acc, len) = (a :: acc, len + 1)
 

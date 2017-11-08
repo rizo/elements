@@ -29,6 +29,15 @@ exception Undefined
 let undefined () =
   raise Undefined
 
+let bracket init (free : 'a -> unit) f =
+  let x = init () in
+  try
+    let r = f x in
+    free x;
+    r
+  with exn ->
+    free x;
+    raise exn
 
 
 (* Comparisons and Ordering *)
@@ -214,8 +223,8 @@ type 'a printer = Format.formatter -> 'a -> unit
 
 let format = Format.asprintf
 
-let print ?(out = P.stdout) ?(endline = "\n") str =
-  P.output_string out (str ^ endline)
+let print ?(output = P.stdout) ?(break = "\n") str =
+  P.output_string output (str ^ break)
 
 
 module type Printable = sig
@@ -483,7 +492,7 @@ module Bool = struct
   let parse str =
     try
       Some (P.bool_of_string str)
-    with exn ->
+    with _ ->
       None
 
   (* Printable *)
@@ -574,7 +583,7 @@ module Int = struct
   let parse s =
     try
       Some (Unsafe.of_string s)
-    with e ->
+    with _ ->
       None
 
   (* Printable *)
@@ -680,7 +689,7 @@ module Float = struct
   let parse str =
     try
       Some (float_of_string str)
-    with e ->
+    with _ ->
       None
 
   (* Printable *)
@@ -770,6 +779,7 @@ end
 
 (* Function operations *)
 
+let pass () = ()
 let ( @ ) = P.( @@ )
 let ( |> ) = P.( |> )
 let identity x = x

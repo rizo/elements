@@ -4,10 +4,6 @@ open Collection
 
 type 'a t = 'a array
 
-val make : int -> (int -> 'a) -> 'a t
-
-val length : 'a t -> int
-
 val of_list : 'a list -> 'a t
 
 val foldk : ('a -> 'r -> ('r -> 'r) -> 'r) -> 'r -> 'a t -> 'r
@@ -19,9 +15,9 @@ module Unsafe : sig
 end
 
 
-include Monoid     with type 'a t := 'a t
-include Default1   with type 'a t := 'a t
-include Functor    with type 'a t := 'a t
-include Iterable   with type 'a t := 'a t
-include Collection with type 'a t := 'a t
+include Monoid      with type 'a t := 'a t
+include Default1    with type 'a t := 'a t
+include Functor     with type 'a t := 'a t
+include Iterable    with type 'a t := 'a t
+include Collectable with type 'a t := 'a t
 

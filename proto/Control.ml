@@ -154,8 +154,9 @@ module Monad = struct
         mas
         (return [])
 
-    let sequence_unit mas =
-      sequence mas >>= fun _ -> B.return ()
+    (* XXX: Export this *)
+    (* let sequence_unit mas = *)
+    (*   sequence mas >>= fun _ -> B.return () *)
   end
 end
 
@@ -211,8 +212,9 @@ module Monad2 = struct
         mas
         (return [])
 
-    let sequence_unit mas =
-      sequence mas >>= fun _ -> B.return ()
+    (* XXX: Export this *)
+    (* let sequence_unit mas = *)
+    (*   sequence mas >>= fun _ -> B.return () *)
   end
 end
 
@@ -334,7 +336,8 @@ module Applicative = struct
 
 
   module Into_functor (A : Base) : (Functor.Base with type 'a t := 'a A.t) = struct
-    type 'a t = 'a A.t
+    (* XXX: Unused *)
+    (* type 'a t = 'a A.t *)
 
     let map f ma =
       A.apply (A.pure f) ma
@@ -355,7 +358,8 @@ module Applicative = struct
     let ( <* ) fa fb =
       lift2 (fun x _ -> x) fa fb
 
-    let ( *> ) fa fb =
+    (* TODO *)
+    let ( *> ) _fa _fb =
       failwith "TODO"
   end
 
@@ -411,7 +415,7 @@ module Applicative2 = struct
 
 
   module Into_functor(A : Base) : (Functor2.Base with type ('a, 'x) t := ('a, 'x) A.t) = struct
-    type ('a, 'x) t = ('a, 'x) A.t
+    (* type ('a, 'x) t = ('a, 'x) A.t *)
 
     let map f ma =
       A.apply (A.pure f) ma
@@ -432,7 +436,8 @@ module Applicative2 = struct
     let ( <* ) fa fb =
       lift2 (fun x _ -> x) fa fb
 
-    let ( *> ) fa fb =
+    (* TODO *)
+    let ( *> ) _fa _fb =
       failwith "TODO"
   end
 
@@ -747,8 +752,6 @@ end
 
 module Exception = struct
   type t = exn
-
-  let fail  = Kernel.fail
 
   let show = Printexc.to_string
 

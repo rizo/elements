@@ -71,7 +71,8 @@ val or_fail : string -> ('a, 'e) result -> 'a
       assert (Ok 42 |> Option.or_fail "no value" = 1);
     ]} *)
 
-val ( <@> ) : ('a, 'e) result -> ('a -> 'b) -> ('b, 'e) result
+(* XXX: better docs *)
+(* val ( <@> ) : ('a, 'e) result -> ('a -> 'b) -> ('b, 'e) result *)
 (** [f <@> self] will apply [f] to the [Ok] value wrapped by [self], returning
     [Ok] with the resulting value, or [Error] if [self] does not not have any
     value. This operator is an infix version of [map].

@@ -4,28 +4,22 @@ open Collection
 type t = string
 type item = char
 
-let split ?(on=' ') str =
-  let rec indices acc i =
-    try
-      let i = succ (Stdlib.String.index_from str i on) in
-      indices (i::acc) i
-    with Not_found ->
-      (Stdlib.String.length str + 1) :: acc
-  in
-  let is = indices [0] 0 in
-  let rec aux acc = function
-    | last::start::tl ->
-      let w = Stdlib.String.sub str start (last - start - 1) in
-      aux (w::acc) (start::tl)
-    | _ -> acc
-  in
-  aux [] is
-
 let length = Stdlib.String.length
 
-let inspect index f r self =
-  if equal index (length self) then r
-  else f (Stdlib.String.unsafe_get self index)
+let split ?on:(sep = ' ') self =
+  let n = Stdlib.String.length self in
+  if n = 0 then Iter.empty else
+  let next f r i =
+    if i > n then r else
+    let j =
+      try Stdlib.String.index_from self i sep
+      with Not_found -> n in
+    let s = Stdlib.String.sub self i (j - i) in
+    f s (j + 1) in
+  Iter { init = (fun () -> 0); next; stop = ignore }
+
+let join ?on:(sep = "") iter =
+  Iter.reduce (fun a b -> a ^ sep ^ b) iter or ""
 
 
 include Iterable0.With_Indexed(struct
@@ -39,21 +33,24 @@ include Iterable0.With_Indexed(struct
 
 
 (* Collection instance *)
-include Collection0.Make(struct
+include Collectable0.Make(struct
     type nonrec t = t
     type nonrec item = item
     type accumulator = Stdlib.Buffer.t
 
-    (* This is probably a bad idea. A new buffer needs to be created each time. *)
-    let init = Buffer.create 16
+    let empty = ""
 
-    let reduce a acc = Buffer.add_char acc a; acc
+    let accumulator self =
+      let acc = Stdlib.Buffer.create 16 in
+      if self <> "" then begin
+        Stdlib.Buffer.add_string acc self
+      end;
+      acc
+
+    let reduce a acc = Stdlib.Buffer.add_char acc a; acc
 
     let extract acc =
-      let s = Buffer.to_bytes acc in
-      (* FIXME: A new buffer should be produced. This is not thread-safe. *)
-      Buffer.reset acc;
-      s
+      Stdlib.Bytes.to_string (Stdlib.Buffer.to_bytes acc)
   end)
 
 

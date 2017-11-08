@@ -268,6 +268,20 @@ val is : 'a -> 'a -> bool
 type 'a printer = Format.formatter -> 'a -> unit
 (** The type for pretty-printers of values of type ['a]. *)
 
+val print : ?output: out_channel -> ?break:string -> string -> unit
+(** [print ?output ?break s] outputs [s] on the [output] channel followed by
+    [break].
+
+    @param output (default = {!stdout}) The output channel to write on.
+    @param break (default = ["\n"]) String to be appended at the end of [s].
+
+    {[
+      print "hello";
+      print "hello, world" ~break:"!!!\n";
+      print (format "hello, %s!" "world");
+      print ~output:stderr "hello";
+    ]} *)
+
 val format : ('a, Format.formatter, unit, string) format4 -> 'a
 (** [format fmt (arg1 ... argN)] formats the arguments [arg1] to [arnN]
     according to the format string [fmt] and returns the result as a string.
@@ -283,18 +297,6 @@ val format : ('a, Format.formatter, unit, string) format4 -> 'a
       assert (format "x = %d" 42 = "x = 42");
       assert (format "Hello, %s!" world = "Hello, world!");
     ]} *)
-
-val print : ?out: out_channel -> ?endline:string -> string -> unit
-(** [print ?out ?endline str] outputs the string [str] on the [out] channel
-    (defaults to {!stdout}) followed by [endline] (defaults to ["\n"]).
-
-    {[
-      print "hello";
-      print "hello, world" ~endline:"!!!\n";
-      print (format "hello, %s!" "world");
-      print ~out:stderr "hello";
-    ]} *)
-
 
 (** Signature for the monomorphic types that can be printed.
 
@@ -751,7 +753,8 @@ module Float : sig
 
   (** {6:conv Conversion } *)
 
-  val of_int : int -> float
+  (* XXX: why is this unused? *)
+  (* val of_int : int -> float *)
   (** Convert an integer to floating-point. *)
 
   val to_int : float -> int
@@ -811,13 +814,6 @@ module Char : sig
   include Parsable   with type t := t
   include Printable  with type t := t
 end
-
-
-val char : int -> char option
-(** Global alias for {!Char.option_of_int}. *)
-
-val code : char -> int
-(** Global alias for {!Char.to_int}. *)
 
 
 (** Bitwise operations *)
@@ -903,6 +899,7 @@ val ( >> )  : ('a -> 'b) -> ('b -> 'c) -> 'a -> 'c
 
 
 module Control : module type of Control
+module System : module type of System
 
 (** Export Control modules and definitions. *)
 module Exception = Control.Exception
@@ -911,18 +908,24 @@ module Function = Control.Function
 
 (** {1:data Datatypes} *)
 module Data : sig
-  module Array  : module type of Array
-  module Either : module type of Either
-  module List   : module type of List
-  module Option : module type of Option
-  module Ref    : module type of Ref
-  module Result : module type of Result
-  module Set    : module type of Set
-  module Stream : module type of Stream
-  module String : module type of String
-  module Tuple  : module type of Tuple
-  module Void   : module type of Void
+  module Array      : module type of Array
+  module Either     : module type of Either
+  module List       : module type of List
+  module Iter       : module type of Iter
+  module Fold       : module type of Fold
+  module Option     : module type of Option
+  module Ref        : module type of Ref
+  module Result     : module type of Result
+  module Set        : module type of Set
+  module Stream     : module type of Stream
+  module Collection : module type of Collection
+  module String     : module type of String
+  module Tuple      : module type of Tuple
+  module Void       : module type of Void
 end
+
+type 'a iter = 'a Iter.t
+(** The type containers that can be iterated. *)
 
 (** Export Data modules and definitions. *)
 module Option = Data.Option
@@ -998,6 +1001,7 @@ val result : ('a -> 'b) -> ('e -> 'b) -> ('a, 'e) result -> 'b
 (* (** {6 Global either definitions} *) *)
 
 type ('a, 'b) either = Left of 'a | Right of 'b
+
 
 
 (*---------------------------------------------------------------------------

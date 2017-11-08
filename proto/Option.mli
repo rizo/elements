@@ -77,7 +77,8 @@ val or_fail : string -> 'a t -> 'a
       assert (List.head [1; 2; 3] |> Option.or_fail "empty list" = 1);
     ]} *)
 
-val ( <@> ) : 'a t -> ('a -> 'b) -> 'b t
+(* XXX: Better docs *)
+(* val ( <@> ) : 'a t -> ('a -> 'b) -> 'b t *)
 (** [f <@> self] will apply [f] to the value wrapped by [self], returning an
     option with the resulting value, or [None] if [self] does not not have any
     value. This operator is an infix version of [map].

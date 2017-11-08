@@ -1,4 +1,3 @@
-
 (** This module attempts to provide an uniform interface for {e collections}.
 
     The supported collections are:
@@ -18,162 +17,10 @@
     - Vector
 *)
 
-open Local
 open Kernel
-open Control
+open Iter.Public
 
-
-type 'a iter =
-  Iter : {
-    init : 'cursor;
-    next : 'r . ('a -> 'cursor -> 'r) -> 'r -> 'cursor -> 'r;
-  } -> 'a iter
-
-
-module Iter = struct
-  type 'a t = 'a iter
-
-  let each f (Iter i) =
-    let rec go s =
-      i.next (fun a s' -> f a; go s') () s in
-    go i.init
-
-  let fold_state s0 f r0 next =
-    let rec go r s =
-      next (fun a -> go (f a r)) r s in
-    go r0 s0
-
-  let fold f r (Iter i) =
-    fold_state i.init f r i.next
-
-  let reduce f (Iter i) =
-    i.next
-      (fun r0 s0 -> Some (fold_state s0 f r0 i.next))
-      None i.init
-
-  let fold_while f r0 (Iter i) =
-    let rec go s r =
-      i.next
-        (fun a s' ->
-           match f a r with
-           | `Continue r' -> go s' r'
-           | `Stop r' -> r')
-        r s in
-    go i.init r0
-
-  let find predicate (Iter i) =
-    let rec go s =
-      i.next
-        (fun a s' ->
-           if predicate a then Some a
-           else go s')
-        None s in
-    go i.init
-
-  let find_index predicate (Iter i) =
-    let rec go n s =
-      i.next
-        (fun a s' ->
-           if predicate a then Some n
-           else go (n + 1) s')
-        None s in
-    go 0 i.init
-
-  let find_indices predicate (Iter i) =
-    let rec go n r s =
-      i.next
-        (fun a s' ->
-           if predicate a then go (n + 1) (n :: r) s'
-           else go (n + 1) r s') r s in
-    Stdlib.List.rev (go 0 [] i.init)
-
-  let index ?equal x self =
-    let equal = equal or Kernel.equal in
-    find_index (equal x) self
-
-  let indices ?equal x self =
-    let equal = equal or Kernel.equal in
-    find_indices (equal x) self
-
-  let find_max ?by self =
-    let compare = by or Kernel.compare in
-    let (>) a b = compare a b = Comparable.greater in
-    reduce (fun a b -> if a > b then a else b) self
-
-  let find_min ?by self =
-    let compare = by or Kernel.compare in
-    let (<) a b = compare a b = Comparable.less in
-    reduce (fun a b -> if a < b then a else b) self
-
-  let contains x self =
-    Option.is_some (find ((==) x) self)
-
-  let count predicate (Iter i) =
-    let rec go n s =
-      i.next
-        (fun a s' ->
-           if predicate a then go (n + 1) s'
-           else go n s')
-        n s in
-    go 0 i.init
-
-  let sum self =
-    fold ( + ) 0 self
-
-  let product (Iter i) =
-    let rec go r s =
-      i.next
-        (fun a s' ->
-           if a = 0 then 0
-           else go (a * r) s')
-        r s in
-    go 1 i.init
-
-  let all p (Iter i) =
-    let rec go s =
-      i.next
-        (fun a s' ->
-           if p a then go s'
-           else false)
-        true s in
-    go i.init
-
-  let any p (Iter i) =
-    let rec go s =
-      i.next
-        (fun a s' ->
-           if p a then go s'
-           else true)
-        false s in
-    go i.init
-
-  let to_list_reversed self =
-    fold (fun x xs -> x :: xs) [] self
-
-  let to_list self =
-    Stdlib.List.rev (to_list_reversed self)
-
-  let is_empty (Iter i) =
-    i.next (fun _a _s -> false) true i.init
-
-  let length self =
-    fold (fun _ n -> n + 1) 0 self
-
-  let get n (Iter i) =
-    let rec go idx s =
-      i.next
-        (fun a s' ->
-           if idx = n then Some a
-           else go (idx + 1) s')
-        None s in
-    go 0 i.init
-
-  let first self  = get 0 self
-  let second self = get 1 self
-
-  let last self =
-    fold (fun a _ -> Some a) None self
-end
+type 'a iter = 'a Iter.t
 
 
 (* Should this be called sequential? For both array and list these functions
@@ -207,6 +54,7 @@ module type Iterable1 = sig
         assert (List.find (fun a -> a < 0) [42; 32; 21; 56; 34] == None);
       ]} *)
 
+  (* TODO: Should this return an iter? *)
   val find_indices : ('a -> bool) -> 'a t -> int list
   (** [find_indices p self] returns indices of all the elements from [self]
       matching the predicate [p]. *)
@@ -251,6 +99,8 @@ module type Iterable1 = sig
   val contains : 'a -> 'a t -> bool
   (** [contains x self] is equivalent to [is_some (find ((=) x) self)].
 
+      {i Note}: This function relies on the polymorphic equality function {!Kernel.equal}.
+
       {[
         assert (contains 'x' ['a'; 'b'; 'x'] = true);
         assert (contains 'x' ['a'; 'b'; 'd'] = false);
@@ -262,7 +112,7 @@ module type Iterable1 = sig
       one go.
 
       {[
-        assert (count (fun a -> a < 0) [1; -2; 3; -4; 5; 6] == 2);
+        assert (count (fun a -> a < 0) [1; -2; 3; -4; 5; 6] = 2);
       ]} *)
 
   val fold : ('a -> 'r -> 'r) -> 'r -> 'a t -> 'r
@@ -319,7 +169,7 @@ module Iterable1 = struct
     type 'a t
     type 'a cursor
 
-    val init : 'a t -> 'a cursor
+    val cursor : 'a t -> 'a cursor
     val next : 'a t -> ('a -> 'a cursor -> 'r) -> 'r -> 'a cursor -> 'r
   end
 
@@ -330,12 +180,13 @@ module Iterable1 = struct
     val unsafe_get : int -> 'a t -> 'a
   end
 
+  (* TODO: Rename to `With_Iterable`, Add `Make` for something with `iter`. *)
+  (* TODO: Consider adding `stop` to Iterable. *)
   module Make(B : Basic) : Iterable1 with type 'a t := 'a B.t = struct
     let iter self =
-      Iter {
-        init = B.init self;
-        next = (fun f -> B.next self f);
-      }
+      Iter { init = (fun () -> B.cursor self);
+             next = (fun yield r s -> B.next self yield r s);
+             stop = ignore }
 
     let each f self                 = Iter.each f (iter self)
     let fold f r self               = Iter.fold f r (iter self)
@@ -369,7 +220,7 @@ module Iterable1 = struct
         type 'a t = 'a B.t
         type 'a cursor = int
 
-        let init self = 0
+        let cursor _self = 0
         let next self f r cursor =
           if cursor = B.length self then r
           else f (B.unsafe_get cursor self) (cursor + 1)
@@ -379,7 +230,7 @@ module Iterable1 = struct
     let is_empty self =
       match B.length self with
       | 0 -> true
-      | n -> false
+      | _ -> false
 
     let length = B.length
 
@@ -448,8 +299,9 @@ module Iterable0 = struct
 
   module Make(B : Basic) : Iterable0 with type t := B.t and type item := B.item = struct
     let iter self =
-      Iter { init = B.init self;
-             next = (fun f -> B.next self f) }
+      Iter { init = (fun () -> B.init self);
+             next = (fun yield r s -> B.next self yield r s);
+             stop = ignore }
 
     let each f self                 = Iter.each f (iter self)
     let fold f r self               = Iter.fold f r (iter self)
@@ -482,7 +334,7 @@ module Iterable0 = struct
         type item = B.item
         type cursor = int
 
-        let init self = 0
+        let init _self = 0
         let next self f r cursor =
           if cursor = B.length self then r
           else f (B.unsafe_get cursor self) (cursor + 1)
@@ -492,7 +344,7 @@ module Iterable0 = struct
     let is_empty self =
       match B.length self with
       | 0 -> true
-      | n -> false
+      | _ -> false
 
     let length = B.length
 
@@ -516,34 +368,36 @@ end
     A {e reducible} provides an [init]ial accumulator value, a [reduce]
     function and an [extract] function. This way a reducible defines
     an implementation of a {e fold} that can produce a container type ['a t]. *)
-module type Reducible = sig
-  type 'a t
-  type 'a accumulator
 
-  val init : 'a accumulator
-  val reduce : 'a -> 'a accumulator -> 'a accumulator
-  val extract : 'a accumulator -> 'a t
-end
-
-
-module type Collection = sig
+module type Collectable1 = sig
   type 'a t
 
+  val empty : 'a t
   val make : int -> (int -> 'a) -> 'a t
   val singleton : 'a -> 'a t
   val replicate : int -> 'a -> 'a t
-  val collect : 'a iter -> 'a t
+  val collect : ?into: 'a t -> 'a iter -> 'a t
 end
 
 
-module Collection = struct
-  module Make(B : Reducible) : Collection with type 'a t := 'a B.t = struct
-    open B
+module Collectable1 = struct
+  module type Basic = sig
+    type 'a t
+    type 'a accumulator
+
+    val empty : 'a t
+    val accumulator : 'a t -> 'a accumulator
+    val reduce : 'a -> 'a accumulator -> 'a accumulator
+    val extract : 'a accumulator -> 'a t
+  end
+
+  module Make(B : Basic) : Collectable1 with type 'a t := 'a B.t = struct
+    let empty = B.empty
 
     let unfold f seed =
       let rec loop s acc =
-        f (fun a s' -> loop s' (reduce a acc)) acc s in
-      extract (loop seed init)
+        f (fun a s' -> loop s' (B.reduce a acc)) acc s in
+      B.extract (loop seed (B.accumulator B.empty))
 
     let make n f =
       let step k r count =
@@ -555,43 +409,47 @@ module Collection = struct
 
     let singleton x = replicate 1 x
 
-    let collect (Iter i) =
-      unfold i.next i.init
+    let collect ?into:(start = B.empty) (Iter iter) =
+      let rec loop acc s =
+        iter.next (fun a s' -> loop (B.reduce a acc) s') acc s in
+      bracket iter.init iter.stop
+        (fun s -> B.extract (loop (B.accumulator start) s))
   end
 end
 
 
-module type Reducible0 = sig
-  type t
-  type item
-  type accumulator
 
-  val init : accumulator
-  val reduce : item -> accumulator -> accumulator
-  val extract : accumulator -> t
-end
-
-
-module type Collection0 = sig
+module type Collectable0 = sig
   type t
   type item
 
+  val empty : t
   val make : int -> (int -> item) -> t
   val singleton : item -> t
   val replicate : int -> item -> t
-  val collect : item iter -> t
+  val collect : ?into: t -> item iter -> t
 end
 
 
-module Collection0 = struct
-  module Make(B : Reducible0) : Collection0 with type t := B.t and type item := B.item = struct
-    type item = B.item
-    open B
+module Collectable0 = struct
+  module type Basic = sig
+    type t
+    type item
+    type accumulator
+
+    val empty : t
+    val accumulator : t -> accumulator
+    val reduce : item -> accumulator -> accumulator
+    val extract : accumulator -> t
+  end
+
+  module Make(B : Basic) : Collectable0 with type t := B.t and type item := B.item = struct
+    let empty = B.empty
 
     let unfold f seed =
       let rec loop s acc =
-        f (fun a s' -> loop s' (reduce a acc)) acc s in
-      extract (loop seed init)
+        f (fun a s' -> loop s' (B.reduce a acc)) acc s in
+      B.extract (loop seed (B.accumulator B.empty))
 
     let make n f =
       let step k r count =
@@ -603,63 +461,19 @@ module Collection0 = struct
 
     let singleton x = replicate 1 x
 
-    let collect (Iter i) =
-      unfold i.next i.init
+    let collect ?into:(start = B.empty) (Iter iter) =
+      let rec loop acc s =
+        iter.next (fun a s' -> loop (B.reduce a acc) s') acc s in
+      bracket iter.init iter.stop
+        (fun s -> B.extract (loop (B.accumulator start) s))
   end
 end
-
-
-type ('a, 'b) fold =
-  Fold : {
-    init : 'accumulator;
-    reduce : 'a -> 'accumulator -> 'accumulator;
-    extract : 'accumulator -> 'b;
-  } -> ('a, 'b) fold
-
-
-module Fold = struct
-  type ('a, 'b) t = ('a, 'b) fold
-
-  let pure b =
-    Fold { init = ();
-           reduce = (fun () _ -> ());
-           extract = (fun () -> b) }
-
-  let (<$>) f (Fold { init; reduce; extract }) =
-    Fold { init; reduce; extract = f << extract }
-
-  let (<*>) (Fold l) (Fold r) =
-    let init = (l.init, r.init) in
-    let reduce a (ls, rs) = (l.reduce a ls, r.reduce a rs) in
-    let extract (ls, rs) = l.extract ls (r.extract rs) in
-    Fold { init; reduce; extract }
-
-  let sum =
-    Fold { init = 0;
-           reduce = (+);
-           extract = identity }
-
-  let length =
-    Fold { init = 0;
-           reduce = (fun a n -> n + 1);
-           extract = identity }
-
-  let average = (/) <$> sum <*> length
-
-  let list =
-    Fold { init = identity;
-           reduce = (fun a s -> s << Stdlib.List.cons a);
-           extract = (fun f -> f []) }
-end
-
-
-let fold (Fold f) (Iter i) =
-  let rec go r s =
-    i.next (fun a s' -> go (f.reduce a r) s') r s in
-  f.extract (go f.init i.init)
 
 
 (* Public Defaults *)
 module type Iterable = Iterable1
 module Iterable = Iterable1
+
+module Collectable = Collectable1
+module type Collectable = Collectable1
 

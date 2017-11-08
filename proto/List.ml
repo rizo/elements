@@ -90,7 +90,7 @@ include Iterable.Make(struct
     type nonrec 'a t = 'a t
     type 'a cursor = 'a t
 
-    let init self = self
+    let cursor self = self
 
     let next self f r cursor =
       match cursor with
@@ -100,11 +100,12 @@ include Iterable.Make(struct
 
 
 (* Collection instance *)
-include Collection.Make(struct
+include Collectable.Make(struct
     type nonrec 'a t = 'a t
     type 'a accumulator = 'a t
 
-    let init = []
+    let empty = []
+    let accumulator self = self
     let reduce a acc = a :: acc
     let extract acc = Stdlib.List.rev acc
   end)
@@ -128,17 +129,17 @@ let foldk f =
 
 let add x xs = x :: xs
 
-let inspect f r self =
+let case f r self =
   match self with
   | [] -> r
   | x :: xs -> f x xs
 
-let head self =
+let first self =
   match self with
   | [] -> None
   | x :: _ -> Some x
 
-let tail self =
+let rest self =
   match self with
   | [] -> None
   | _ :: xs -> Some xs
@@ -146,7 +147,7 @@ let tail self =
 
 let filter predicate =
   let rec go acc =
-    inspect (fun a -> go (if predicate a then add a acc else acc)) acc in
+    case (fun a -> go (if predicate a then add a acc else acc)) acc in
   go empty
 
 
@@ -231,15 +232,22 @@ let take n self =
   reverse (reverse_take n self)
 
 
+let of_list self = self
+let to_list self = self
+
+let of_array = Stdlib.Array.to_list
+let to_array = Stdlib.Array.of_list
+
+
 module Unsafe = struct
-  let head self =
+  let first self =
     match self with
-    | [] -> raise (Failure "called head on empty list")
+    | [] -> raise (Failure "called `first` on empty list")
     | x :: _ -> x
 
-  let tail self =
+  let rest self =
     match self with
-    | [] -> raise (Failure "called tail on empty list")
+    | [] -> raise (Failure "called `rest` on empty list")
     | _ :: xs -> xs
 
   let get n self =

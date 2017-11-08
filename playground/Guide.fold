@@ -1,0 +1,24 @@
+
+
+
+module List
+  type Self a = List a
+
+
+  instance Iterable (Self a)
+    type Cursor a = Self a
+
+    def cursor self = self
+
+    def next self continue empty cursor =
+      case cursor
+      | a & cursor' -> continue a cursor'
+      | [] -> empty
+      end
+  end
+end
+
+
+
+
+

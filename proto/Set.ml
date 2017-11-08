@@ -6,7 +6,6 @@ module type Set = sig
   type item
 
   (* Collectable *)
-  val empty : t
   val add : item -> t -> t
   val singleton : item -> t
 
@@ -45,7 +44,6 @@ module type Set = sig
   val is_superset : t -> of': t -> bool
 
   val each : (item -> unit) -> t -> unit
-  val map : (item -> item) -> t -> t
   val filter : (item -> bool) -> t -> t
 
   val partition : (item -> bool) -> t -> t * t

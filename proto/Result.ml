@@ -21,7 +21,7 @@ let is_error self =
 let force self =
   match self with
   | Ok x    -> x
-  | Error e -> raise Not_ok
+  | Error _ -> raise Not_ok
 
 let catch f =
   try

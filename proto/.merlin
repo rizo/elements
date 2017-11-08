@@ -1,5 +1,5 @@
 B ../_build/default/proto
 B ../_build/default/shadow-stdlib/lib
-FLG -open Proto__ -w -40 -w -40
+FLG -open Proto__ -w -40 -w -40 -w -40
 S .
 S ../shadow-stdlib/lib

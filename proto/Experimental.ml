@@ -232,6 +232,7 @@ end
  - [init] sounds too imperative (create, make?)
  - Sliceable
  - String.join : string -> string t -> string
+  - val join : ?separator: item -> item iter -> t
  - A collection is [Indexed] xor [Sequential]
 - val Base.Set.sum (module Base__.Commutative_group.S with type t = 'sum) -> ('a, 'b) t -> f:('a -> 'sum) -> 'sum
     [sum t] returns the sum of [f t] for each [t] in the set.
