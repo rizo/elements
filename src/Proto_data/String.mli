@@ -16,6 +16,8 @@ val split : ?on: char -> t -> t iter
       assert (split ~on:'|' "|x||" == iter [""; "x"; ""; ""]);
     ]} *)
 
+val join : ?on: char -> string Iter.t -> string
+
 
 (** {6 Implemented instances} *)
 include Comparable   with type t := t

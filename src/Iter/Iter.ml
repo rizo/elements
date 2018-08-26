@@ -25,8 +25,8 @@ module Public = struct
   type ('a, 'r) reducer =
     Reducer : {
       init : unit -> 'accumulator;
-    reduce : 'a -> 'accumulator -> 'accumulator;
-    extract : 'accumulator -> 'r;
+      reduce : 'a -> 'accumulator -> 'accumulator;
+      extract : 'accumulator -> 'r;
     } -> ('a, 'r) reducer
 end
 
@@ -37,64 +37,8 @@ type 'a t = 'a iter
 
 (* Producers *)
 
-let empty =
-  Iter { init = pass;
-         next = (fun _ r _ -> r);
-         stop = pass }
 
-let make n f =
-  (* FIXME: Add checks *)
-  let next yield r s =
-    if s = n then r
-    else yield (f s) (s + 1) in
-  Iter { init = (fun () -> 0);
-         next;
-         stop = ignore }
 
-let count ?by:(step = 1) start =
-  (* FIXME: Add checks *)
-  let next yield _r n = yield n (n + step) in
-  Iter { init = (fun () -> start);
-         next;
-         stop = ignore }
-
-let range ?by:(step = 1) start stop =
-  (* FIXME: Add checks *)
-  let next yield r s =
-    if s >= stop then r
-    else yield s (s + step) in
-  Iter { init = (fun () -> start); next; stop = ignore }
-
-let iota ?by stop =
-  range ?by 0 stop
-
-let repeat x =
-  Iter { init = pass;
-         next = (fun yield _ -> yield x);
-         stop = pass }
-
-let repeatedly f =
-  Iter { init = pass;
-         next = (fun yield _ -> yield (f ()));
-         stop = pass }
-
-let iterate f x =
-  Iter { init = (fun () -> x);
-         next = (fun yield _ s -> yield s (f s));
-         stop = ignore }
-
-let of_list list =
-  let next yield r s =
-    match s with
-    | [] -> r
-    | a :: s' -> yield a s' in
-  Iter { init = (fun () -> list); next; stop = ignore; }
-
-let of_array array =
-  let next yield r idx =
-    if Array.length array = idx then r
-    else yield (Array.unsafe_get array idx) (idx + 1) in
-  Iter { init = (fun () -> 0); next; stop = ignore }
 
 
 (* Transformers *)
@@ -256,8 +200,6 @@ let to_list self =
 let is_empty (Iter iter) =
   bracket iter.init iter.stop (iter.next (fun _ _ -> false) true)
 
-let length self =
-  fold (fun _ n -> n + 1) 0 self
 
 let get n (Iter iter) =
   let rec loop idx s =

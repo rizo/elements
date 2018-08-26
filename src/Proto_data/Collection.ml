@@ -373,7 +373,7 @@ module type Collectable1 = sig
   type 'a t
 
   val empty : 'a t
-  val make : int -> (int -> 'a) -> 'a t
+  val with_length : int -> (int -> 'a) -> 'a t
   val singleton : 'a -> 'a t
   val replicate : int -> 'a -> 'a t
   val collect : ?into: 'a t -> 'a iter -> 'a t
@@ -399,13 +399,13 @@ module Collectable1 = struct
         f (fun a s' -> loop s' (B.reduce a acc)) acc s in
       B.extract (loop seed (B.accumulator B.empty))
 
-    let make n f =
+    let with_length n f =
       let step k r count =
         if count <= 0 then r
         else k (f count) (count - 1) in
       unfold step n
 
-    let replicate n x = make n (always x)
+    let replicate n x = with_length n (always x)
 
     let singleton x = replicate 1 x
 
@@ -424,7 +424,7 @@ module type Collectable0 = sig
   type item
 
   val empty : t
-  val make : int -> (int -> item) -> t
+  val with_length : int -> (int -> item) -> t
   val singleton : item -> t
   val replicate : int -> item -> t
   val collect : ?into: t -> item iter -> t
@@ -451,13 +451,13 @@ module Collectable0 = struct
         f (fun a s' -> loop s' (B.reduce a acc)) acc s in
       B.extract (loop seed (B.accumulator B.empty))
 
-    let make n f =
+    let with_length n f =
       let step k r count =
         if count <= 0 then r
         else k (f count) (count - 1) in
       unfold step n
 
-    let replicate n x = make n (always x)
+    let replicate n x = with_length n (always x)
 
     let singleton x = replicate 1 x
 

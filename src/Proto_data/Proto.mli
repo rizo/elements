@@ -908,20 +908,6 @@ module Function = Control.Function
 
 (** {1:data Datatypes} *)
 module Data : sig
-  module Array      : module type of Array
-  module Either     : module type of Either
-  module List       : module type of List
-  module Iter       : module type of Iter
-  module Fold       : module type of Fold
-  module Option     : module type of Option
-  module Ref        : module type of Ref
-  module Result     : module type of Result
-  module Set        : module type of Set
-  module Stream     : module type of Stream
-  module Collection : module type of Collection
-  module String     : module type of String
-  module Tuple      : module type of Tuple
-  module Void       : module type of Void
 end
 
 type 'a iter = 'a Iter.t
