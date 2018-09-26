@@ -1,11 +1,11 @@
-# Proto
+# Elements
 
-Proto is a small and modular standard library alternative for OCaml.
+Elements is a small and modular standard library alternative for OCaml.
 
 Currently the following modules are provided:
 
 ```
-Proto
+Elements
  ├── Kernel
  │  ├── Int
  │  ├── Float
@@ -64,9 +64,9 @@ measurements, that are triggered on each build and stored for review.
 
 ## Installation
 
-Proto can be installed with `opam`:
+Elements can be installed with `opam`:
 
-    opam install proto
+    opam install elements
 
 If you don't use `opam` consult the [`opam`](opam) file for build
 instructions.
@@ -76,9 +76,9 @@ instructions.
 
 The documentation and API reference is generated from the source
 interfaces. It can be consulted [online][doc] or via `odig doc
-proto`.
+elements`.
 
-[doc]: http://rizo.odis.io/proto/doc
+[doc]: http://rizo.odis.io/elements/doc
 
 
 ## License
